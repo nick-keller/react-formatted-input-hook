@@ -1,5 +1,5 @@
 import { FormattedInputOptions, useFormattedInput } from './useFormattedInput'
-import { addThousandSeparator } from './utils'
+import { addThousandSeparator, clamp } from './utils'
 
 export type FormattedNumberInputOptions = Pick<
   FormattedInputOptions,
@@ -36,63 +36,35 @@ export const useFormattedNumberInput = ({
 }: FormattedNumberInputOptions = {}) => {
   return useFormattedInput({
     value: value === null ? '' : String(value),
-    onKeyDown: (event, { insert, caret, value }) => {
-      if (event.key.match(/^[0-9]$/)) {
+    onKeyDown: ({ key, insert, caret, value }) => {
+      if (key.match(/^[0-9]$/)) {
         let decimalsStart = value.indexOf('.')
         if (decimalsStart !== -1 && decimalsStart < caret.left) {
           if (
             caret.right !== value.length ||
             caret.left - decimalsStart - 1 < maxDecimals
           ) {
-            insert(event.key)
+            insert(key)
           }
         } else {
-          insert(event.key)
+          insert(key)
         }
       }
 
-      if (
-        event.key === '-' &&
-        value[0] !== '-' &&
-        min < 0 &&
-        caret.left === 0
-      ) {
+      if (key === '-' && value[0] !== '-' && min < 0 && caret.left === 0) {
         insert('-')
       }
 
       if (
-        decimalSeparatorKeys.includes(event.key) &&
-        !value.includes('.') &&
+        decimalSeparatorKeys.includes(key) &&
+        !value.slice(0, caret.left).includes('.') &&
+        !value.slice(caret.right).includes('.') &&
         maxDecimals > 0
       ) {
         insert(/[0-9]/.test(value[caret.left - 1] ?? '') ? '.' : '0.')
       }
     },
-    format: ({ value, focused }) => {
-      // if (!focused) {
-      //   const canonicalValue = String(Number(value))
-      //   let [whole, decimals] = value.split('.')
-      //
-      //   decimals = decimals ?? ''
-      //
-      //   if (!decimals && minDecimals > 0) {
-      //     decimals = decimalSeparator
-      //   }
-      //
-      //   if (decimals) {
-      //     decimals = decimals.padEnd(minDecimals + 1, '0')
-      //   }
-      //
-      //   return {
-      //     formatted:
-      //       prefix +
-      //       addThousandSeparator(whole, thousandsSeparator) +
-      //       decimals +
-      //       suffix,
-      //     mapping: [],
-      //   }
-      // }
-
+    format: (value) => {
       const negative = value[0] === '-'
       const [whole, decimals] = value.slice(negative ? 1 : 0).split('.')
       let formatted = addThousandSeparator(whole, thousandsSeparator)
@@ -125,6 +97,43 @@ export const useFormattedNumberInput = ({
         mapping,
       }
     },
+    onBlur: (value) => {
+      if (!value || isNaN(Number(value))) {
+        return ''
+      }
+
+      let [whole, decimals] = String(clamp(Number(value), min, max) + 0).split(
+        '.'
+      )
+
+      decimals = decimals ?? ''
+
+      if (minDecimals > 0) {
+        decimals = decimals.padEnd(minDecimals, '0')
+      }
+
+      return whole + (decimals ? '.' + decimals.slice(0, maxDecimals) : '')
+    },
+    onChange: ({ value, formattedValue }) =>
+      onChange({
+        value:
+          value === '' || isNaN(Number(value))
+            ? null
+            : Math.pow(10, scale) *
+              clamp(
+                Number(
+                  value.replace(
+                    maxDecimals > 0 && maxDecimals !== Infinity
+                      ? new RegExp(`(\\.[0-9]{0,${maxDecimals}}).*$`)
+                      : '',
+                    '$1'
+                  )
+                ) + 0,
+                min,
+                max
+              ),
+        formattedValue,
+      }),
     liveUpdate,
   })
 }

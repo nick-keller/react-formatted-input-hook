@@ -5,6 +5,7 @@ import {
   useCallback,
   useRef,
 } from 'react'
+import { clamp } from './utils'
 
 export type InsertFn = (text: string) => void
 
@@ -17,8 +18,8 @@ export type SetValueFn = (
 export type SetCaretFn = (start: number, end?: number) => void
 
 export type OnKeyDownFn = (
-  event: KeyboardEvent<HTMLInputElement>,
-  helpers: Readonly<{
+  params: Readonly<{
+    key: KeyboardEvent<HTMLInputElement>['key']
     insert: InsertFn
     setCaret: SetCaretFn
     setValue: SetValueFn
@@ -27,7 +28,7 @@ export type OnKeyDownFn = (
   }>
 ) => void
 
-export type FormatFn = (value: { value: string; focused: boolean }) => {
+export type FormatFn = (value: string) => {
   formatted: string
   mapping: number[]
 }
@@ -44,31 +45,20 @@ export type FormattedInputOptions = {
   value?: string
   onChange?: (value: { value: string; formattedValue: string }) => void
   onBlur?: (value: string) => string
-  liveUpdate?: boolean
   onKeyDown?: OnKeyDownFn
+  liveUpdate?: boolean
   format?: FormatFn
 }
 
-const clamp = (value: number, min: number, max: number) => {
-  return Math.min(Math.max(value, min), max)
-}
-
-const updateDom = (
-  input: HTMLInputElement,
-  state: InputState,
-  focused: boolean
-) => {
+const updateDom = (input: HTMLInputElement, state: InputState) => {
   const caretLeft = Math.min(state.caretStart, state.caretEnd)
   const caretRight = Math.max(state.caretStart, state.caretEnd)
 
-  const { formatted, mapping } = state.format({
-    value: state.value,
-    focused,
-  })
+  const { formatted, mapping } = state.format(state.value)
 
   input.value = formatted
 
-  if (focused) {
+  if (input === document.activeElement) {
     if (caretLeft === caretRight) {
       input.selectionStart =
         caretLeft === 0 ? mapping[0] : mapping[caretLeft] + 1
@@ -85,7 +75,8 @@ const updateDom = (
 }
 
 const defaultNullFn = () => null
-const defaultFormat: FormatFn = ({ value }) => ({
+const defaultIdentityFn = (value: string) => value
+const defaultFormat: FormatFn = (value) => ({
   formatted: value,
   mapping: [0, ...value.split('').map((_, i) => i)],
 })
@@ -93,6 +84,7 @@ const defaultFormat: FormatFn = ({ value }) => ({
 export const useFormattedInput = ({
   value = '',
   onChange = defaultNullFn,
+  onBlur: blurHandler = defaultIdentityFn,
   onKeyDown: keyDownHandler = defaultNullFn,
   liveUpdate = false,
   format = defaultFormat,
@@ -107,15 +99,39 @@ export const useFormattedInput = ({
     caretEnd: 0,
   })
 
-  const setCaret = useCallback((start: number, end: number = start) => {
-    if (!inputRef.current) {
-      throw new Error('Missing input ref')
-    }
+  const setCaret = useCallback<SetCaretFn>(
+    (start: number, end: number = start) => {
+      if (!inputRef.current) {
+        throw new Error('Missing input ref')
+      }
 
-    state.current.caretStart = clamp(start, 0, state.current.value.length)
-    state.current.caretEnd = clamp(end, 0, state.current.value.length)
+      state.current.caretStart = clamp(start, 0, state.current.value.length)
+      state.current.caretEnd = clamp(end, 0, state.current.value.length)
 
-    updateDom(inputRef.current, state.current, true)
+      updateDom(inputRef.current, state.current)
+    },
+    []
+  )
+
+  const insert = useCallback<InsertFn>((text) => {
+    const caretLeft = Math.min(state.current.caretStart, state.current.caretEnd)
+    const caretRight = Math.max(
+      state.current.caretStart,
+      state.current.caretEnd
+    )
+
+    state.current.value =
+      state.current.value.slice(0, caretLeft) +
+      text +
+      state.current.value.slice(caretRight)
+
+    setCaret(caretLeft + text.length)
+  }, [])
+
+  const setValue = useCallback<SetValueFn>((value, caretStart, caretEnd) => {
+    state.current.value = value
+
+    setCaret(caretStart, caretEnd)
   }, [])
 
   const onKeyDown = useCallback<KeyboardEventHandler<HTMLInputElement>>(
@@ -124,12 +140,19 @@ export const useFormattedInput = ({
         throw new Error('Missing input ref')
       }
 
-      if (event.key === 'Tab') {
+      if (
+        event.key === 'Tab' ||
+        event.key === 'Enter' ||
+        event.key === 'Escape'
+      ) {
         // Do nothing, let the browser handle it
         return
       }
 
-      event.preventDefault()
+      // Do not prevent CMD or CTRL keypress
+      if (!event.metaKey && !event.ctrlKey && !event.altKey) {
+        event.preventDefault()
+      }
 
       const caretLeft = Math.min(
         state.current.caretStart,
@@ -140,10 +163,15 @@ export const useFormattedInput = ({
         state.current.caretEnd
       )
       const caretLength = caretRight - caretLeft
+      const previousValue = state.current.value
 
       if (event.key === 'a' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault()
+
         setCaret(0, state.current.value.length)
       } else if (event.key === 'Backspace') {
+        event.preventDefault()
+
         if (caretLength !== 0) {
           state.current.value =
             state.current.value.slice(0, caretLeft) +
@@ -159,6 +187,8 @@ export const useFormattedInput = ({
           setCaret(caretLeft - 1)
         }
       } else if (event.key === 'Delete') {
+        event.preventDefault()
+
         if (caretLength !== 0) {
           state.current.value =
             state.current.value.slice(0, caretLeft) +
@@ -176,6 +206,8 @@ export const useFormattedInput = ({
         (event.key === 'ArrowLeft' || event.key === 'ArrowRight') &&
         !event.metaKey
       ) {
+        event.preventDefault()
+
         const delta = event.key === 'ArrowLeft' ? -1 : 1
 
         if (event.shiftKey) {
@@ -190,6 +222,8 @@ export const useFormattedInput = ({
         event.key === 'ArrowUp' ||
         (event.key === 'ArrowLeft' && event.metaKey)
       ) {
+        event.preventDefault()
+
         if (event.shiftKey) {
           setCaret(0, caretRight)
         } else {
@@ -200,32 +234,30 @@ export const useFormattedInput = ({
         event.key === 'ArrowDown' ||
         (event.key === 'ArrowRight' && event.metaKey)
       ) {
+        event.preventDefault()
+
         if (event.shiftKey) {
           setCaret(state.current.value.length, caretLeft)
         } else {
           setCaret(state.current.value.length)
         }
-      } else {
-        const insert: InsertFn = (text) => {
-          state.current.value =
-            state.current.value.slice(0, caretLeft) +
-            text +
-            state.current.value.slice(caretRight)
+      } else if (!event.metaKey && !event.ctrlKey && !event.altKey) {
+        event.preventDefault()
 
-          setCaret(caretLeft + text.length)
-        }
-        const setValue: SetValueFn = (value, caretStart, caretEnd) => {
-          state.current.value = value
-
-          setCaret(caretStart, caretEnd)
-        }
-
-        state.current.onKeyDown(event, {
+        state.current.onKeyDown({
+          key: event.key,
           insert,
           setCaret,
           value: state.current.value,
           caret: { left: caretLeft, right: caretRight },
           setValue,
+        })
+      }
+
+      if (previousValue !== state.current.value && liveUpdate) {
+        onChange({
+          value: state.current.value,
+          formattedValue: inputRef.current.value,
         })
       }
     },
@@ -241,7 +273,17 @@ export const useFormattedInput = ({
       throw new Error('Missing input ref')
     }
 
-    updateDom(inputRef.current, state.current, false)
+    const previousValue = state.current.value
+    state.current.value = blurHandler(previousValue)
+
+    updateDom(inputRef.current, state.current)
+
+    if (previousValue !== state.current.value || !liveUpdate) {
+      onChange({
+        value: state.current.value,
+        formattedValue: inputRef.current.value,
+      })
+    }
   }, [])
 
   return {
@@ -252,6 +294,8 @@ export const useFormattedInput = ({
       onBlur,
     },
     setCaret,
+    insert,
+    setValue,
   }
 }
 

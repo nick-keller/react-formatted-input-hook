@@ -6,7 +6,13 @@ function App() {
     decimalSeparator: ',',
     prefix: '$ ',
     suffix: ' %',
-    maxDecimals: 3,
+    maxDecimals: 4,
+    minDecimals: 0,
+    min: 0,
+    max: 100,
+    scale: -2,
+    liveUpdate: true,
+    onChange: console.log,
   })
 
   return (
