@@ -1,15 +1,18 @@
-import { useNumberInputFormat } from './useNumberInputFormat'
+import { useFormattedNumberInput } from './useFormattedNumberInput'
 
 function App() {
-  const numberInput = useNumberInputFormat({
+  const formattedInput = useFormattedNumberInput({
+    thousandsSeparator: ' ',
+    decimalSeparator: ',',
     prefix: '$ ',
     suffix: ' %',
+    maxDecimals: 3,
   })
 
   return (
     <>
       <input />
-      <input {...numberInput.props} />
+      <input {...formattedInput.props} />
       <input />
     </>
   )

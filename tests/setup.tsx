@@ -1,8 +1,8 @@
 import {
   NumberInputFormat,
-  NumberInputFormatOptions,
-  useNumberInputFormat,
-} from '../src/useNumberInputFormat'
+  FormattedNumberInputOptions,
+  useFormattedNumberInput,
+} from '../src/useFormattedNumberInput'
 import userEvent from '@testing-library/user-event'
 import { render, screen, act } from '@testing-library/react'
 
@@ -10,10 +10,10 @@ const WrapperComponent = ({
   options,
   setNumberInputFormat,
 }: {
-  options?: NumberInputFormatOptions
+  options?: FormattedNumberInputOptions
   setNumberInputFormat?: (nif: NumberInputFormat) => void
 }) => {
-  const numberInput = useNumberInputFormat(options)
+  const numberInput = useFormattedNumberInput(options)
   setNumberInputFormat?.(numberInput)
 
   return <input {...numberInput.props} />
@@ -26,7 +26,7 @@ export const setup = async ({
 }: {
   focus?: boolean
   caret?: number | [number, number]
-  options?: NumberInputFormatOptions
+  options?: FormattedNumberInputOptions
 } = {}) => {
   const user = userEvent.setup()
   let numberInputFormat: NumberInputFormat
