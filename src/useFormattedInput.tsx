@@ -1,45 +1,17 @@
 import {
   FocusEventHandler,
-  KeyboardEvent,
   KeyboardEventHandler,
   useCallback,
   useRef,
 } from 'react'
 import { clamp } from './utils'
-
-export type InsertFn = (text: string) => void
-
-export type SetValueFn = (
-  value: string,
-  caretStart: number,
-  caretEnd?: number
-) => void
-
-export type SetCaretFn = (start: number, end?: number) => void
-
-export type OnKeyDownFn = (
-  params: Readonly<{
-    key: KeyboardEvent<HTMLInputElement>['key']
-    insert: InsertFn
-    setCaret: SetCaretFn
-    setValue: SetValueFn
-    value: string
-    caret: { left: number; right: number }
-  }>
-) => void
-
-export type FormatFn = (value: string) => {
-  formatted: string
-  mapping: number[]
-}
-
-type InputState = {
-  value: string
-  onKeyDown: OnKeyDownFn
-  caretStart: number
-  caretEnd: number
-  format: FormatFn
-}
+import {
+  FormatFn,
+  InsertFn,
+  OnKeyDownFn,
+  SetCaretFn,
+  SetValueFn,
+} from './types'
 
 export type FormattedInputOptions = {
   value?: string
@@ -48,6 +20,16 @@ export type FormattedInputOptions = {
   onKeyDown?: OnKeyDownFn
   liveUpdate?: boolean
   format?: FormatFn
+}
+
+export type InputState = Required<
+  Pick<
+    FormattedInputOptions,
+    'onChange' | 'value' | 'onKeyDown' | 'format' | 'onBlur'
+  >
+> & {
+  caretStart: number
+  caretEnd: number
 }
 
 const updateDom = (input: HTMLInputElement, state: InputState) => {
@@ -94,10 +76,17 @@ export const useFormattedInput = ({
   const state = useRef<InputState>({
     value,
     onKeyDown: keyDownHandler,
+    onBlur: blurHandler,
+    onChange,
     format,
     caretStart: 0,
     caretEnd: 0,
   })
+
+  state.current.onKeyDown = keyDownHandler
+  state.current.onChange = onChange
+  state.current.onBlur = blurHandler
+  state.current.format = format
 
   const setCaret = useCallback<SetCaretFn>(
     (start: number, end: number = start) => {
@@ -113,26 +102,35 @@ export const useFormattedInput = ({
     []
   )
 
-  const insert = useCallback<InsertFn>((text) => {
-    const caretLeft = Math.min(state.current.caretStart, state.current.caretEnd)
-    const caretRight = Math.max(
-      state.current.caretStart,
-      state.current.caretEnd
-    )
+  const insert = useCallback<InsertFn>(
+    (text) => {
+      const caretLeft = Math.min(
+        state.current.caretStart,
+        state.current.caretEnd
+      )
+      const caretRight = Math.max(
+        state.current.caretStart,
+        state.current.caretEnd
+      )
 
-    state.current.value =
-      state.current.value.slice(0, caretLeft) +
-      text +
-      state.current.value.slice(caretRight)
+      state.current.value =
+        state.current.value.slice(0, caretLeft) +
+        text +
+        state.current.value.slice(caretRight)
 
-    setCaret(caretLeft + text.length)
-  }, [])
+      setCaret(caretLeft + text.length)
+    },
+    [setCaret]
+  )
 
-  const setValue = useCallback<SetValueFn>((value, caretStart, caretEnd) => {
-    state.current.value = value
+  const setValue = useCallback<SetValueFn>(
+    (value, caretStart, caretEnd) => {
+      state.current.value = value
 
-    setCaret(caretStart, caretEnd)
-  }, [])
+      setCaret(caretStart, caretEnd)
+    },
+    [setCaret]
+  )
 
   const onKeyDown = useCallback<KeyboardEventHandler<HTMLInputElement>>(
     (event) => {
@@ -255,18 +253,18 @@ export const useFormattedInput = ({
       }
 
       if (previousValue !== state.current.value && liveUpdate) {
-        onChange({
+        state.current.onChange({
           value: state.current.value,
           formattedValue: inputRef.current.value,
         })
       }
     },
-    []
+    [insert, liveUpdate, setCaret, setValue]
   )
 
   const onFocus = useCallback<FocusEventHandler<HTMLInputElement>>(() => {
     setCaret(0, state.current.value.length)
-  }, [])
+  }, [setCaret])
 
   const onBlur = useCallback<FocusEventHandler<HTMLInputElement>>(() => {
     if (!inputRef.current) {
@@ -274,17 +272,17 @@ export const useFormattedInput = ({
     }
 
     const previousValue = state.current.value
-    state.current.value = blurHandler(previousValue)
+    state.current.value = state.current.onBlur(previousValue)
 
     updateDom(inputRef.current, state.current)
 
     if (previousValue !== state.current.value || !liveUpdate) {
-      onChange({
+      state.current.onChange({
         value: state.current.value,
         formattedValue: inputRef.current.value,
       })
     }
-  }, [])
+  }, [liveUpdate])
 
   return {
     props: {

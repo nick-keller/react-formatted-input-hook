@@ -38,7 +38,8 @@ export const useFormattedNumberInput = ({
     value: value === null ? '' : String(value),
     onKeyDown: ({ key, insert, caret, value }) => {
       if (key.match(/^[0-9]$/)) {
-        let decimalsStart = value.indexOf('.')
+        const decimalsStart = value.indexOf('.')
+
         if (decimalsStart !== -1 && decimalsStart < caret.left) {
           if (
             caret.right !== value.length ||
