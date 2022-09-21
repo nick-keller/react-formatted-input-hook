@@ -77,10 +77,16 @@ export const useFormattedNumberInput = ({
       }
 
       const offset =
-        prefix.length + (negative ? 1 : 0) + Math.floor((whole.length - 1) / 3)
+        prefix.length +
+        (negative ? 1 : 0) +
+        Math.floor((whole.length - 1) / 3) * thousandsSeparator.length
 
       for (let i = 0; i < whole.length; i++) {
-        mapping.push(i + offset - Math.floor((whole.length - 1 - i) / 3))
+        mapping.push(
+          i +
+            offset -
+            Math.floor((whole.length - 1 - i) / 3) * thousandsSeparator.length
+        )
       }
 
       if (decimals !== undefined) {
@@ -103,9 +109,7 @@ export const useFormattedNumberInput = ({
         return ''
       }
 
-      let [whole, decimals] = String(clamp(Number(value), min, max) + 0).split(
-        '.'
-      )
+      let [whole, decimals] = String(clamp(Number(value), min, max)).split('.')
 
       decimals = decimals ?? ''
 
@@ -123,12 +127,12 @@ export const useFormattedNumberInput = ({
             : Math.pow(10, scale) *
               clamp(
                 Number(
-                  value.replace(
-                    maxDecimals > 0 && maxDecimals !== Infinity
-                      ? new RegExp(`(\\.[0-9]{0,${maxDecimals}}).*$`)
-                      : '',
-                    '$1'
-                  )
+                  maxDecimals > 0 && maxDecimals !== Infinity
+                    ? value.replace(
+                        new RegExp(`(\\.[0-9]{0,${maxDecimals}}).*$`),
+                        '$1'
+                      )
+                    : value
                 ) + 0,
                 min,
                 max
@@ -139,4 +143,4 @@ export const useFormattedNumberInput = ({
   })
 }
 
-export type NumberInputFormat = ReturnType<typeof useFormattedNumberInput>
+export type FormattedNumberInput = ReturnType<typeof useFormattedNumberInput>

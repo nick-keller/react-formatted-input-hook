@@ -2,6 +2,7 @@ import {
   FocusEventHandler,
   KeyboardEventHandler,
   useCallback,
+  useEffect,
   useRef,
 } from 'react'
 import { clamp } from './utils'
@@ -87,6 +88,18 @@ export const useFormattedInput = ({
   state.current.onChange = onChange
   state.current.onBlur = blurHandler
   state.current.format = format
+
+  useEffect(() => {
+    if (!inputRef.current) {
+      throw new Error('Missing input ref')
+    }
+
+    if (inputRef.current !== document.activeElement) {
+      state.current.value = value
+
+      updateDom(inputRef.current, state.current)
+    }
+  }, [value])
 
   const setCaret = useCallback<SetCaretFn>(
     (start: number, end: number = start) => {

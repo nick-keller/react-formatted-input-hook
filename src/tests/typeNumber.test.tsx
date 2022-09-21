@@ -11,7 +11,7 @@ it('should type numbers at the end of the input', async () => {
 it('should type numbers at caret', async () => {
   const { user, input } = await setup({
     caret: 2,
-    options: { initialValue: 123 },
+    options: { value: 123 },
   })
 
   await user.keyboard('45')
@@ -22,7 +22,7 @@ it('should type numbers at caret', async () => {
 it('should replace selection', async () => {
   const { user, input } = await setup({
     caret: [1, 3],
-    options: { initialValue: 1234 },
+    options: { value: 1234 },
   })
 
   await user.keyboard('56')
@@ -33,7 +33,7 @@ it('should replace selection', async () => {
 it('should replace reversed selection', async () => {
   const { user, input } = await setup({
     caret: [3, 1],
-    options: { initialValue: 1234 },
+    options: { value: 1234 },
   })
 
   await user.keyboard('56')
