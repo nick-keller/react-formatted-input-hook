@@ -40,3 +40,25 @@ it('should replace reversed selection', async () => {
 
   expect(input).toHaveCaret('156|4')
 })
+
+it('should limit the number of decimal', async () => {
+  const { user, input } = await setup({
+    caret: 0,
+    options: { value: null, maxDecimals: 2 },
+  })
+
+  await user.keyboard('1.2345')
+
+  expect(input).toHaveCaret('1.23|')
+})
+
+it('should not limit the number of decimal if not typing at the end', async () => {
+  const { user, input } = await setup({
+    caret: 3,
+    options: { value: 1.23, maxDecimals: 2 },
+  })
+
+  await user.keyboard('45')
+
+  expect(input).toHaveCaret('1.245|3')
+})

@@ -74,6 +74,7 @@ export const useFormattedInput = ({
 }: FormattedInputOptions = {}) => {
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // Use a ref to manage internal state to minimize re-renders
   const state = useRef<InputState>({
     value,
     onKeyDown: keyDownHandler,
@@ -89,6 +90,7 @@ export const useFormattedInput = ({
   state.current.onBlur = blurHandler
   state.current.format = format
 
+  // Update DOM when value changes and input is blurred
   useEffect(() => {
     if (!inputRef.current) {
       throw new Error('Missing input ref')
@@ -200,13 +202,13 @@ export const useFormattedInput = ({
       } else if (event.key === 'Delete') {
         event.preventDefault()
 
-        if (caretLength !== 0) {
+        if (event.metaKey) {
+          // Do nothing
+        } else if (caretLength !== 0) {
           state.current.value =
             state.current.value.slice(0, caretLeft) +
             state.current.value.slice(caretRight)
           setCaret(caretLeft)
-        } else if (event.metaKey) {
-          // Do nothing
         } else {
           state.current.value =
             state.current.value.slice(0, caretLeft) +

@@ -40,7 +40,11 @@ export const useFormattedNumberInput = ({
       if (key.match(/^[0-9]$/)) {
         const decimalsStart = value.indexOf('.')
 
+        // If user types a number after the decimal point
         if (decimalsStart !== -1 && decimalsStart < caret.left) {
+          // Do not register keystroke if
+          // - cursor is at the end of input
+          // - and input already has maximum number of decimals allowed
           if (
             caret.right !== value.length ||
             caret.left - decimalsStart - 1 < maxDecimals
@@ -52,7 +56,16 @@ export const useFormattedNumberInput = ({
         }
       }
 
-      if (key === '-' && value[0] !== '-' && min < 0 && caret.left === 0) {
+      // Only allow typing minus :
+      // - at the start of the input
+      // - no minus already present
+      // - negative numbers are allowed
+      if (
+        key === '-' &&
+        caret.left === 0 &&
+        value[caret.right] !== '-' &&
+        min < 0
+      ) {
         insert('-')
       }
 
@@ -79,12 +92,14 @@ export const useFormattedNumberInput = ({
       const offset =
         prefix.length +
         (negative ? 1 : 0) +
+        // Number of thousands separator on the whole part
         Math.floor((whole.length - 1) / 3) * thousandsSeparator.length
 
       for (let i = 0; i < whole.length; i++) {
         mapping.push(
           i +
             offset -
+            // number of thousands separator to the right of the cursor
             Math.floor((whole.length - 1 - i) / 3) * thousandsSeparator.length
         )
       }

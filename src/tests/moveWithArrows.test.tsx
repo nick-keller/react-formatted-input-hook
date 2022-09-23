@@ -77,6 +77,28 @@ test('CMD + Left arrow should move to the start', async () => {
   expect(input).toHaveCaret('|1234')
 })
 
+test('Home should move to the start', async () => {
+  const { user, input } = await setup({
+    caret: 3,
+    options: { value: 1234 },
+  })
+
+  await user.keyboard('[Home]')
+
+  expect(input).toHaveCaret('|1234')
+})
+
+test('Up arrow should move to the start', async () => {
+  const { user, input } = await setup({
+    caret: 3,
+    options: { value: 1234 },
+  })
+
+  await user.keyboard('[ArrowUp]')
+
+  expect(input).toHaveCaret('|1234')
+})
+
 test('CMD + Right arrow should move to the end', async () => {
   const { user, input } = await setup({
     caret: 2,
@@ -84,6 +106,28 @@ test('CMD + Right arrow should move to the end', async () => {
   })
 
   await user.keyboard('{Meta>}[ArrowRight]{/Meta}')
+
+  expect(input).toHaveCaret('1234|')
+})
+
+test('End should move to the end', async () => {
+  const { user, input } = await setup({
+    caret: 2,
+    options: { value: 1234 },
+  })
+
+  await user.keyboard('[End]')
+
+  expect(input).toHaveCaret('1234|')
+})
+
+test('Down arrow should move to the end', async () => {
+  const { user, input } = await setup({
+    caret: 2,
+    options: { value: 1234 },
+  })
+
+  await user.keyboard('[ArrowDown]')
 
   expect(input).toHaveCaret('1234|')
 })
@@ -165,6 +209,17 @@ test('CMD + Shift + Left arrow should select to the start', async () => {
   expect(input).toHaveCaret('|123|4')
 })
 
+test('Shift + Home should select to the start', async () => {
+  const { user, input } = await setup({
+    caret: 3,
+    options: { value: 1234 },
+  })
+
+  await user.keyboard('{Shift>}[Home]{/Shift}')
+
+  expect(input).toHaveCaret('|123|4')
+})
+
 test('CMD + Shift + Right arrow should select to the end', async () => {
   const { user, input } = await setup({
     caret: 2,
@@ -172,6 +227,17 @@ test('CMD + Shift + Right arrow should select to the end', async () => {
   })
 
   await user.keyboard('{Meta>}{Shift>}[ArrowRight]{/Shift}{/Meta}')
+
+  expect(input).toHaveCaret('12|34|')
+})
+
+test('Shift + End should select to the end', async () => {
+  const { user, input } = await setup({
+    caret: 2,
+    options: { value: 1234 },
+  })
+
+  await user.keyboard('{Shift>}[End]{/Shift}')
 
   expect(input).toHaveCaret('12|34|')
 })
@@ -187,6 +253,17 @@ test('CMD + Shift + Left arrow should expand selection to the start', async () =
   expect(input).toHaveCaret('|123|4')
 })
 
+test('Shift + Home should expand selection to the start', async () => {
+  const { user, input } = await setup({
+    caret: [2, 3],
+    options: { value: 1234 },
+  })
+
+  await user.keyboard('{Shift>}[Home]{/Shift}')
+
+  expect(input).toHaveCaret('|123|4')
+})
+
 test('CMD + Shift + Right arrow should expand selection to the end', async () => {
   const { user, input } = await setup({
     caret: [1, 2],
@@ -194,6 +271,17 @@ test('CMD + Shift + Right arrow should expand selection to the end', async () =>
   })
 
   await user.keyboard('{Meta>}{Shift>}[ArrowRight]{/Shift}{/Meta}')
+
+  expect(input).toHaveCaret('1|234|')
+})
+
+test('Shift + End should expand selection to the end', async () => {
+  const { user, input } = await setup({
+    caret: [1, 2],
+    options: { value: 1234 },
+  })
+
+  await user.keyboard('{Shift>}[End]{/Shift}')
 
   expect(input).toHaveCaret('1|234|')
 })
@@ -209,6 +297,17 @@ test('CMD + Shift + Left arrow should expand reversed selection to the start', a
   expect(input).toHaveCaret('|123|4')
 })
 
+test('Shift + Home should expand reversed selection to the start', async () => {
+  const { user, input } = await setup({
+    caret: [3, 2],
+    options: { value: 1234 },
+  })
+
+  await user.keyboard('{Shift>}[Home]{/Shift}')
+
+  expect(input).toHaveCaret('|123|4')
+})
+
 test('CMD + Shift + Right arrow should expand reversed selection to the end', async () => {
   const { user, input } = await setup({
     caret: [2, 1],
@@ -216,6 +315,17 @@ test('CMD + Shift + Right arrow should expand reversed selection to the end', as
   })
 
   await user.keyboard('{Meta>}{Shift>}[ArrowRight]{/Shift}{/Meta}')
+
+  expect(input).toHaveCaret('1|234|')
+})
+
+test('Shift + End should expand reversed selection to the end', async () => {
+  const { user, input } = await setup({
+    caret: [2, 1],
+    options: { value: 1234 },
+  })
+
+  await user.keyboard('{Shift>}[End]{/Shift}')
 
   expect(input).toHaveCaret('1|234|')
 })
