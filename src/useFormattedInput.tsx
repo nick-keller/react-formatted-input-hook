@@ -31,6 +31,7 @@ export type InputState = Required<
 > & {
   caretStart: number
   caretEnd: number
+  selectAllOnFocus: boolean
 }
 
 const updateDom = (input: HTMLInputElement, state: InputState) => {
@@ -55,6 +56,18 @@ const updateDom = (input: HTMLInputElement, state: InputState) => {
       input.selectionEnd = mapping[caretRight] + 1
     }
   }
+}
+
+const getCursorPosition = (mapping: number[], position: number) => {
+  let cursor = 0
+  while (
+    Math.abs(mapping[cursor] + (!cursor ? 0 : 1) - position) >
+    Math.abs((mapping[cursor + 1] ?? Infinity) + 1 - position)
+  ) {
+    cursor++
+  }
+
+  return cursor
 }
 
 const defaultNullFn = () => null
@@ -83,6 +96,7 @@ export const useFormattedInput = ({
     format,
     caretStart: 0,
     caretEnd: 0,
+    selectAllOnFocus: true,
   })
 
   state.current.onKeyDown = keyDownHandler
@@ -278,13 +292,17 @@ export const useFormattedInput = ({
   )
 
   const onFocus = useCallback<FocusEventHandler<HTMLInputElement>>(() => {
-    setCaret(0, state.current.value.length)
+    if (state.current.selectAllOnFocus) {
+      setCaret(0, state.current.value.length)
+    }
   }, [setCaret])
 
   const onBlur = useCallback<FocusEventHandler<HTMLInputElement>>(() => {
     if (!inputRef.current) {
       throw new Error('Missing input ref')
     }
+
+    state.current.selectAllOnFocus = true
 
     const previousValue = state.current.value
     state.current.value = state.current.onBlur(previousValue)
@@ -305,6 +323,40 @@ export const useFormattedInput = ({
       onKeyDown,
       onFocus,
       onBlur,
+      onMouseDown: () => {
+        state.current.selectAllOnFocus = false
+        requestAnimationFrame(() => {
+          const { mapping } = state.current.format(state.current.value)
+
+          if (
+            inputRef.current?.selectionStart === inputRef.current?.selectionEnd
+          ) {
+            setCaret(
+              getCursorPosition(mapping, inputRef.current?.selectionStart ?? 0)
+            )
+          }
+        })
+      },
+      onMouseUp: () => {
+        requestAnimationFrame(() => {
+          const { mapping } = state.current.format(state.current.value)
+
+          setCaret(
+            getCursorPosition(mapping, inputRef.current?.selectionStart ?? 0),
+            getCursorPosition(mapping, inputRef.current?.selectionEnd ?? 0)
+          )
+        })
+      },
+      onMouseMove: () => {
+        requestAnimationFrame(() => {
+          const { mapping } = state.current.format(state.current.value)
+
+          setCaret(
+            getCursorPosition(mapping, inputRef.current?.selectionStart ?? 0),
+            getCursorPosition(mapping, inputRef.current?.selectionEnd ?? 0)
+          )
+        })
+      },
     },
     setCaret,
     insert,
