@@ -1,6 +1,8 @@
 import {
+  ClipboardEventHandler,
   FocusEventHandler,
   KeyboardEventHandler,
+  MouseEventHandler,
   useCallback,
   useEffect,
   useRef,
@@ -107,7 +109,7 @@ export const useFormattedInput = ({
   // Update DOM when value changes and input is blurred
   useEffect(() => {
     if (!inputRef.current) {
-      throw new Error('Missing input ref')
+      return
     }
 
     if (inputRef.current !== document.activeElement) {
@@ -120,7 +122,7 @@ export const useFormattedInput = ({
   const setCaret = useCallback<SetCaretFn>(
     (start: number, end: number = start) => {
       if (!inputRef.current) {
-        throw new Error('Missing input ref')
+        return
       }
 
       state.current.caretStart = clamp(start, 0, state.current.value.length)
@@ -164,7 +166,7 @@ export const useFormattedInput = ({
   const onKeyDown = useCallback<KeyboardEventHandler<HTMLInputElement>>(
     (event) => {
       if (!inputRef.current) {
-        throw new Error('Missing input ref')
+        return
       }
 
       if (
@@ -299,7 +301,7 @@ export const useFormattedInput = ({
 
   const onBlur = useCallback<FocusEventHandler<HTMLInputElement>>(() => {
     if (!inputRef.current) {
-      throw new Error('Missing input ref')
+      return
     }
 
     state.current.selectAllOnFocus = true
@@ -317,46 +319,91 @@ export const useFormattedInput = ({
     }
   }, [liveUpdate])
 
+  const onMouseDown = useCallback<MouseEventHandler<HTMLInputElement>>(() => {
+    // Prevent onFocus from selecting all text
+    state.current.selectAllOnFocus = false
+
+    // Wait for the selection to be confirmed
+    requestAnimationFrame(() => {
+      const { mapping } = state.current.format(state.current.value)
+
+      // Only handle fixed caret, otherwise wait for mouse up
+      if (inputRef.current?.selectionStart === inputRef.current?.selectionEnd) {
+        setCaret(
+          getCursorPosition(mapping, inputRef.current?.selectionStart ?? 0)
+        )
+      }
+    })
+  }, [setCaret])
+
+  // On mouse up constrain selection
+  useEffect(() => {
+    const listener = () => {
+      requestAnimationFrame(() => {
+        if (document.activeElement === inputRef.current) {
+          const { mapping } = state.current.format(state.current.value)
+
+          setCaret(
+            getCursorPosition(mapping, inputRef.current?.selectionStart ?? 0),
+            getCursorPosition(mapping, inputRef.current?.selectionEnd ?? 0)
+          )
+        }
+      })
+    }
+
+    document.addEventListener('mouseup', listener)
+
+    return () => document.removeEventListener('mouseup', listener)
+  }, [setCaret])
+
+  const onCopy = useCallback<ClipboardEventHandler<HTMLInputElement>>(
+    (event) => {
+      event.clipboardData.setData(
+        'text/plain',
+        state.current.value.slice(
+          Math.min(state.current.caretStart, state.current.caretEnd),
+          Math.max(state.current.caretStart, state.current.caretEnd)
+        )
+      )
+      event.preventDefault()
+    },
+    []
+  )
+
+  const onCut = useCallback<ClipboardEventHandler<HTMLInputElement>>(
+    (event) => {
+      const caretLeft = Math.min(
+        state.current.caretStart,
+        state.current.caretEnd
+      )
+      const caretRight = Math.max(
+        state.current.caretStart,
+        state.current.caretEnd
+      )
+
+      event.clipboardData.setData(
+        'text/plain',
+        state.current.value.slice(caretLeft, caretRight)
+      )
+      event.preventDefault()
+
+      state.current.value =
+        state.current.value.slice(0, caretLeft) +
+        state.current.value.slice(caretRight)
+      setCaret(caretLeft)
+    },
+    [setCaret]
+  )
+
   return {
     props: {
       ref: inputRef,
       onKeyDown,
       onFocus,
       onBlur,
-      onMouseDown: () => {
-        state.current.selectAllOnFocus = false
-        requestAnimationFrame(() => {
-          const { mapping } = state.current.format(state.current.value)
-
-          if (
-            inputRef.current?.selectionStart === inputRef.current?.selectionEnd
-          ) {
-            setCaret(
-              getCursorPosition(mapping, inputRef.current?.selectionStart ?? 0)
-            )
-          }
-        })
-      },
-      onMouseUp: () => {
-        requestAnimationFrame(() => {
-          const { mapping } = state.current.format(state.current.value)
-
-          setCaret(
-            getCursorPosition(mapping, inputRef.current?.selectionStart ?? 0),
-            getCursorPosition(mapping, inputRef.current?.selectionEnd ?? 0)
-          )
-        })
-      },
-      onMouseMove: () => {
-        requestAnimationFrame(() => {
-          const { mapping } = state.current.format(state.current.value)
-
-          setCaret(
-            getCursorPosition(mapping, inputRef.current?.selectionStart ?? 0),
-            getCursorPosition(mapping, inputRef.current?.selectionEnd ?? 0)
-          )
-        })
-      },
+      onMouseDown,
+      onCopy,
+      onCut,
     },
     setCaret,
     insert,

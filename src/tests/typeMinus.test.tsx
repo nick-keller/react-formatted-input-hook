@@ -25,12 +25,12 @@ it('should not add minus when minimum is zero', async () => {
 it('should not add minus when minimum is high', async () => {
   const { user, input } = await setup({
     caret: 0,
-    options: { value: 12, min: 99 },
+    options: { value: 101, min: 99 },
   })
 
   await user.keyboard('-')
 
-  expect(input).toHaveCaret('|12')
+  expect(input).toHaveCaret('|101')
 })
 
 it('should not add minus when already has minus', async () => {

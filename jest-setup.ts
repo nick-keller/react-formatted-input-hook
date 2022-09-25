@@ -36,7 +36,10 @@ expect.extend({
 
     let state = received.value
 
-    if (typeof received.selectionEnd === 'number') {
+    if (
+      document.activeElement === received &&
+      typeof received.selectionEnd === 'number'
+    ) {
       state =
         state.slice(0, received.selectionEnd) +
         '|' +
@@ -44,6 +47,7 @@ expect.extend({
     }
 
     if (
+      document.activeElement === received &&
       typeof received.selectionStart === 'number' &&
       received.selectionEnd !== received.selectionStart
     ) {

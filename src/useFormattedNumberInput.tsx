@@ -19,6 +19,34 @@ export type FormattedNumberInputOptions = Pick<
   onChange?: (value: { value: number | null; formattedValue: string }) => void
 }
 
+const constrainValue = ({
+  minDecimals,
+  min,
+  value,
+  max,
+  maxDecimals,
+}: {
+  minDecimals: number
+  maxDecimals: number
+  value: string
+  min: number
+  max: number
+}) => {
+  if (!value || isNaN(Number(value))) {
+    return ''
+  }
+
+  let [whole, decimals] = String(clamp(Number(value), min, max)).split('.')
+
+  decimals = decimals ?? ''
+
+  if (minDecimals > 0) {
+    decimals = decimals.padEnd(minDecimals, '0')
+  }
+
+  return whole + (decimals ? '.' + decimals.slice(0, maxDecimals) : '')
+}
+
 export const useFormattedNumberInput = ({
   thousandsSeparator = '',
   decimalSeparator = '.',
@@ -35,7 +63,16 @@ export const useFormattedNumberInput = ({
   liveUpdate,
 }: FormattedNumberInputOptions = {}) => {
   return useFormattedInput({
-    value: value === null ? '' : String(value),
+    value:
+      value === null
+        ? ''
+        : constrainValue({
+            value: String(value),
+            min,
+            max,
+            maxDecimals,
+            minDecimals,
+          }),
     onKeyDown: ({ key, insert, caret, value }) => {
       if (key.match(/^[0-9]$/)) {
         const decimalsStart = value.indexOf('.')
@@ -119,21 +156,8 @@ export const useFormattedNumberInput = ({
         mapping,
       }
     },
-    onBlur: (value) => {
-      if (!value || isNaN(Number(value))) {
-        return ''
-      }
-
-      let [whole, decimals] = String(clamp(Number(value), min, max)).split('.')
-
-      decimals = decimals ?? ''
-
-      if (minDecimals > 0) {
-        decimals = decimals.padEnd(minDecimals, '0')
-      }
-
-      return whole + (decimals ? '.' + decimals.slice(0, maxDecimals) : '')
-    },
+    onBlur: (value) =>
+      constrainValue({ max, maxDecimals, minDecimals, min, value }),
     onChange: ({ value, formattedValue }) =>
       onChange({
         value:
