@@ -12,6 +12,7 @@ import {
   FormatFn,
   InsertFn,
   OnKeyDownFn,
+  OnPasteFn,
   SetCaretFn,
   SetValueFn,
 } from './types'
@@ -21,6 +22,7 @@ export type FormattedInputOptions = {
   onChange?: (value: { value: string; formattedValue: string }) => void
   onBlur?: (value: string) => string
   onKeyDown?: OnKeyDownFn
+  onPaste?: OnPasteFn
   liveUpdate?: boolean
   format?: FormatFn
 }
@@ -28,7 +30,7 @@ export type FormattedInputOptions = {
 export type InputState = Required<
   Pick<
     FormattedInputOptions,
-    'onChange' | 'value' | 'onKeyDown' | 'format' | 'onBlur'
+    'onChange' | 'value' | 'onKeyDown' | 'format' | 'onBlur' | 'onPaste'
   >
 > & {
   caretStart: number
@@ -84,6 +86,7 @@ export const useFormattedInput = ({
   onChange = defaultNullFn,
   onBlur: blurHandler = defaultIdentityFn,
   onKeyDown: keyDownHandler = defaultNullFn,
+  onPaste: pasteHandler = defaultNullFn,
   liveUpdate = false,
   format = defaultFormat,
 }: FormattedInputOptions = {}) => {
@@ -94,6 +97,7 @@ export const useFormattedInput = ({
     value,
     onKeyDown: keyDownHandler,
     onBlur: blurHandler,
+    onPaste: pasteHandler,
     onChange,
     format,
     caretStart: 0,
@@ -391,8 +395,41 @@ export const useFormattedInput = ({
         state.current.value.slice(0, caretLeft) +
         state.current.value.slice(caretRight)
       setCaret(caretLeft)
+
+      if (caretLeft !== caretRight && liveUpdate) {
+        state.current.onChange({
+          value: state.current.value,
+          formattedValue: inputRef.current?.value ?? '',
+        })
+      }
     },
-    [setCaret]
+    [liveUpdate, setCaret]
+  )
+
+  const onPaste = useCallback<ClipboardEventHandler<HTMLInputElement>>(
+    (event) => {
+      event.preventDefault()
+
+      state.current.onPaste({
+        clipboard: event.clipboardData.getData('text/plain'),
+        insert,
+        setCaret,
+        value: state.current.value,
+        caret: {
+          left: Math.min(state.current.caretStart, state.current.caretEnd),
+          right: Math.max(state.current.caretStart, state.current.caretEnd),
+        },
+        setValue,
+      })
+
+      if (liveUpdate) {
+        state.current.onChange({
+          value: state.current.value,
+          formattedValue: inputRef.current?.value ?? '',
+        })
+      }
+    },
+    [insert, liveUpdate, setCaret, setValue]
   )
 
   return {
@@ -404,6 +441,7 @@ export const useFormattedInput = ({
       onMouseDown,
       onCopy,
       onCut,
+      onPaste,
     },
     setCaret,
     insert,

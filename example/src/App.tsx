@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { intlNumberFormatter, useFormattedInput } from '../../src'
 
 function App() {
-  const [value, setValue] = useState<number | null>(0.5)
+  const [value, setValue] = useState<number | null>(1234)
   const formattedInput = useFormattedInput(
     intlNumberFormatter({
       locales: 'en-US',

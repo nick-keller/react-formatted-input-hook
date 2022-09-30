@@ -37,6 +37,7 @@ const constrainValue = ({
     return ''
   }
 
+  // eslint-disable-next-line prefer-const
   let [whole, decimals] = String(clamp(Number(value), min, max)).split('.')
 
   decimals = decimals ?? ''
@@ -79,6 +80,11 @@ export const numberFormatter = ({
             minDecimals,
           }),
     onKeyDown: ({ key, insert, caret, value }) => {
+      // Cannot type to the left of minus sign
+      if (value[caret.right] === '-') {
+        return
+      }
+
       if (key.match(/^[0-9]$/)) {
         const decimalsStart = value.indexOf('.')
 
@@ -100,14 +106,8 @@ export const numberFormatter = ({
 
       // Only allow typing minus :
       // - at the start of the input
-      // - no minus already present
       // - negative numbers are allowed
-      if (
-        key === '-' &&
-        caret.left === 0 &&
-        value[caret.right] !== '-' &&
-        min < 0
-      ) {
+      if (key === '-' && caret.left === 0 && min < 0) {
         insert('-')
       }
 
@@ -187,6 +187,38 @@ export const numberFormatter = ({
               ),
         formattedValue,
       }),
+    onPaste: ({ clipboard, setValue, value, caret }) => {
+      if (value[caret.right] === '-') {
+        return
+      }
+
+      let pasteValue = clipboard.replace(/([^0-9.-]|(?<!^)-)/g, '')
+      const [before, after] = pasteValue.split('.') as [
+        string,
+        string | undefined
+      ]
+      pasteValue = before
+
+      if (
+        typeof after === 'string' &&
+        maxDecimals > 0 &&
+        !value.slice(0, caret.left).includes('.') &&
+        !value.slice(caret.right).includes('.')
+      ) {
+        pasteValue += '.' + after
+      }
+
+      if (min >= 0 || caret.left !== 0) {
+        pasteValue = pasteValue.replace(/-/, '')
+      }
+
+      let newValue =
+        value.slice(0, caret.left) + pasteValue + value.slice(caret.right)
+
+      newValue = newValue.replace(/(?<![0-9])\./, '0.')
+
+      setValue(newValue, newValue.length - value.length + caret.right)
+    },
     liveUpdate,
   }
 }

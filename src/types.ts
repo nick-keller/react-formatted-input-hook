@@ -21,6 +21,17 @@ export type OnKeyDownFn = (
   }>
 ) => void
 
+export type OnPasteFn = (
+  params: Readonly<{
+    clipboard: string
+    insert: InsertFn
+    setCaret: SetCaretFn
+    setValue: SetValueFn
+    value: string
+    caret: { left: number; right: number }
+  }>
+) => void
+
 export type FormatFn = (value: string) => {
   formatted: string
   mapping: number[]
