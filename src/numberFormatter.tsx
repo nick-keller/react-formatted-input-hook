@@ -1,11 +1,12 @@
-import { FormattedInputOptions, useFormattedInput } from './useFormattedInput'
-import { addThousandSeparator, clamp } from './utils'
+import { FormattedInputOptions } from './useFormattedInput'
+import { addGroupingSeparator, clamp } from './utils'
 
-export type FormattedNumberInputOptions = Pick<
+export type NumberFormatterOptions = Pick<
   FormattedInputOptions,
   'liveUpdate'
 > & {
-  thousandsSeparator?: string
+  groupingSeparator?: string
+  grouping?: 'thousand' | 'wan' | 'lakh'
   decimalSeparator?: string
   decimalSeparatorKeys?: string[]
   scale?: number
@@ -47,8 +48,9 @@ const constrainValue = ({
   return whole + (decimals ? '.' + decimals.slice(0, maxDecimals) : '')
 }
 
-export const useFormattedNumberInput = ({
-  thousandsSeparator = '',
+export const numberFormatter = ({
+  groupingSeparator = '',
+  grouping = 'thousand',
   decimalSeparator = '.',
   decimalSeparatorKeys = ['.', decimalSeparator],
   scale = 0,
@@ -61,13 +63,16 @@ export const useFormattedNumberInput = ({
   value = null,
   onChange = () => null,
   liveUpdate,
-}: FormattedNumberInputOptions = {}) => {
-  return useFormattedInput({
+}: NumberFormatterOptions = {}): FormattedInputOptions => {
+  return {
     value:
       value === null
         ? ''
         : constrainValue({
-            value: String(value),
+            value:
+              scale === 0
+                ? String(value)
+                : (Math.pow(10, -scale) * value).toPrecision(15),
             min,
             max,
             maxDecimals,
@@ -118,7 +123,7 @@ export const useFormattedNumberInput = ({
     format: (value) => {
       const negative = value[0] === '-'
       const [whole, decimals] = value.slice(negative ? 1 : 0).split('.')
-      let formatted = addThousandSeparator(whole, thousandsSeparator)
+      let formatted = addGroupingSeparator(whole, groupingSeparator, grouping)
 
       const mapping = [prefix.length]
 
@@ -130,14 +135,14 @@ export const useFormattedNumberInput = ({
         prefix.length +
         (negative ? 1 : 0) +
         // Number of thousands separator on the whole part
-        Math.floor((whole.length - 1) / 3) * thousandsSeparator.length
+        Math.floor((whole.length - 1) / 3) * groupingSeparator.length
 
       for (let i = 0; i < whole.length; i++) {
         mapping.push(
           i +
             offset -
             // number of thousands separator to the right of the cursor
-            Math.floor((whole.length - 1 - i) / 3) * thousandsSeparator.length
+            Math.floor((whole.length - 1 - i) / 3) * groupingSeparator.length
         )
       }
 
@@ -163,23 +168,25 @@ export const useFormattedNumberInput = ({
         value:
           value === '' || isNaN(Number(value))
             ? null
-            : Math.pow(10, scale) *
-              clamp(
-                Number(
-                  maxDecimals > 0 && maxDecimals !== Infinity
-                    ? value.replace(
-                        new RegExp(`(\\.[0-9]{0,${maxDecimals}}).*$`),
-                        '$1'
-                      )
-                    : value
-                ) + 0,
-                min,
-                max
+            : Number(
+                (
+                  Math.pow(10, scale) *
+                  clamp(
+                    Number(
+                      maxDecimals > 0 && maxDecimals !== Infinity
+                        ? value.replace(
+                            new RegExp(`(\\.[0-9]{0,${maxDecimals}}).*$`),
+                            '$1'
+                          )
+                        : value
+                    ) + 0,
+                    min,
+                    max
+                  )
+                ).toPrecision(15)
               ),
         formattedValue,
       }),
     liveUpdate,
-  })
+  }
 }
-
-export type FormattedNumberInput = ReturnType<typeof useFormattedNumberInput>

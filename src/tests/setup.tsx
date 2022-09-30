@@ -1,35 +1,38 @@
 import userEvent from '@testing-library/user-event'
 import { render, screen, act } from '@testing-library/react'
 import {
-  FormattedNumberInputOptions,
-  FormattedNumberInput,
-  useFormattedNumberInput,
+  FormattedInput,
+  numberFormatter,
+  NumberFormatterOptions,
+  useFormattedInput,
 } from '../index'
 import { useState } from 'react'
 
 const WrapperComponent = ({
   options: { value: defaultValue, onChange, ...options } = {},
-  setFormattedNumberInput,
+  setFormattedInput,
 }: {
-  options?: FormattedNumberInputOptions
-  setFormattedNumberInput?: (fni: FormattedNumberInput) => void
+  options?: NumberFormatterOptions
+  setFormattedInput?: (fi: FormattedInput) => void
 }) => {
   const [value, setValue] = useState(defaultValue)
 
-  const numberInput = useFormattedNumberInput({
-    ...options,
-    onChange: (arg) => {
-      onChange?.(arg)
-      setValue(arg.value)
-    },
-    value,
-  })
+  const numberInput = useFormattedInput(
+    numberFormatter({
+      ...options,
+      onChange: (arg) => {
+        onChange?.(arg)
+        setValue(arg.value)
+      },
+      value,
+    })
+  )
 
   if (defaultValue !== value && defaultValue !== undefined) {
     setValue(defaultValue)
   }
 
-  setFormattedNumberInput?.(numberInput)
+  setFormattedInput?.(numberInput)
 
   return <input {...numberInput.props} />
 }
@@ -41,14 +44,14 @@ export const setup = async ({
 }: {
   focus?: boolean
   caret?: number | [number, number]
-  options?: FormattedNumberInputOptions
+  options?: NumberFormatterOptions
 } = {}) => {
   const user = userEvent.setup()
-  let formattedNumberInput: FormattedNumberInput
+  let formattedNumberInput: FormattedInput
   const { rerender, ...rendered } = render(
     <WrapperComponent
       options={options}
-      setFormattedNumberInput={(fni) => (formattedNumberInput = fni)}
+      setFormattedInput={(fni) => (formattedNumberInput = fni)}
     />
   )
   const input = screen.getByRole<HTMLInputElement>('textbox')
@@ -68,7 +71,7 @@ export const setup = async ({
 
   return {
     ...rendered,
-    rerender: (options: FormattedNumberInputOptions) =>
+    rerender: (options: NumberFormatterOptions) =>
       rerender(<WrapperComponent options={options} />),
     user,
     input,

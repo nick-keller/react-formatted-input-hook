@@ -4,7 +4,7 @@ it('should not copy separator', async () => {
   const { user } = await setup({
     options: {
       value: 1234567,
-      thousandsSeparator: ',',
+      groupingSeparator: ',',
     },
     caret: [1, 5],
   })

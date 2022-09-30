@@ -14,7 +14,7 @@ it('should show separator', async () => {
   const { input } = await setup({
     options: {
       value: 1234567,
-      thousandsSeparator: ',',
+      groupingSeparator: ',',
     },
   })
 
@@ -25,7 +25,7 @@ it('should correctly place caret', async () => {
   const { input, formattedNumberInput } = await setup({
     options: {
       value: 1234567,
-      thousandsSeparator: ',',
+      groupingSeparator: ',',
     },
   })
 
@@ -58,7 +58,7 @@ it('should correctly place caret with minus', async () => {
   const { input, formattedNumberInput } = await setup({
     options: {
       value: -1234567,
-      thousandsSeparator: ',',
+      groupingSeparator: ',',
     },
   })
 
@@ -91,7 +91,7 @@ it('should properly select characters to the right', async () => {
   const { input, formattedNumberInput } = await setup({
     options: {
       value: 1234567,
-      thousandsSeparator: ',',
+      groupingSeparator: ',',
     },
   })
 
@@ -112,7 +112,7 @@ it('should properly select characters to the left', async () => {
   const { input, formattedNumberInput } = await setup({
     options: {
       value: 1234567,
-      thousandsSeparator: ',',
+      groupingSeparator: ',',
     },
   })
 

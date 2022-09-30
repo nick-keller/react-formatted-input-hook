@@ -1,17 +1,16 @@
 import { useState } from 'react'
-import { useFormattedNumberInput } from '../../src'
+import { intlNumberFormatter, useFormattedInput } from '../../src'
 
 function App() {
-  const [value, setValue] = useState<number | null>(123456)
-  const formattedInput = useFormattedNumberInput({
-    value,
-    minDecimals: 2,
-    maxDecimals: 4,
-    thousandsSeparator: ',',
-    prefix: '$ ',
-    suffix: ' %',
-    onChange: ({ value }) => setValue(value),
-  })
+  const [value, setValue] = useState<number | null>(0.5)
+  const formattedInput = useFormattedInput(
+    intlNumberFormatter({
+      locales: 'en-US',
+      value,
+      onChange: ({ value }) => setValue(value),
+      liveUpdate: true,
+    })
+  )
 
   return (
     <main>

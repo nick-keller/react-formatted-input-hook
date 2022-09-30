@@ -1,9 +1,15 @@
-export const addThousandSeparator = (
+export const addGroupingSeparator = (
   value: string,
-  thousandsSeparator: string
+  groupingSeparator: string,
+  grouping: 'thousand' | 'wan' | 'lakh'
 ) => {
-  return thousandsSeparator
-    ? value.replace(/\d{1,3}(?=(?:\d{3})+(?!\d))/g, '$&' + thousandsSeparator)
+  const regexp = {
+    thousand: /\d(?=(?:\d{3})+(?!\d))/g,
+    wan: /\d(?=(\d{4})+(?!\d))/g,
+    lakh: /\d+?(?=(\d\d)+(\d)(?!\d))(\.\d+)?/g,
+  }[grouping]
+  return groupingSeparator
+    ? value.replace(regexp, '$&' + groupingSeparator)
     : value
 }
 
