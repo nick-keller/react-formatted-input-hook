@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { currencyFormatter } from 'react-formatted-input-hook'
+import BrowserOnly from '@docusaurus/BrowserOnly'
 
 const { format, onBlur } = currencyFormatter({
   currency: 'USD',
@@ -7,6 +8,10 @@ const { format, onBlur } = currencyFormatter({
 })
 
 export const SideBySide = () => {
+  return <BrowserOnly>{() => <SideBySideBrowser />}</BrowserOnly>
+}
+
+const SideBySideBrowser = () => {
   const [value, setValue] = useState('1234.00')
   const [_, reRender] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)

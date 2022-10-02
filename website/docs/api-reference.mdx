@@ -16,7 +16,7 @@ The hook receives a `FormattedInputOptions` as only parameter, this is what all 
 > Type: `string`<br/>
 > Default: `''`
 
-The [un-formatted]('./under-the-hood) value that is used in the virtual input.
+The un-formatted value that is used in the virtual input.
 
 ### onChange
 > Type: `(value: { value: string; formattedValue: string }) => void`<br/>
@@ -37,7 +37,7 @@ If yo need the `onChange` callback to be called each time the user types a chara
 > Type: `(value: string) => string`<br/>
 > Default: `(value) => value`
 
-This callback is called when the user blurs the input, and lets you update the [un-formatted]('./under-the-hood) value
+This callback is called when the user blurs the input, and lets you update the un-formatted value
 if necessary.
 
 Mostly used to clean up the value: remove unnecessary leading zeros, remove trailing decimal separator...
@@ -122,7 +122,7 @@ formattedInput.setCaret(2, 5)
 ### insert
 > Type: `(text: string) => void`<br/>
 
-Used to insert [un-formatted]('./under-the-hood) text at caret. Caret will automatically be moved to the end on the inserted text, 
+Used to insert un-formatted text at caret. Caret will automatically be moved to the end on the inserted text, 
 just like it would when typing or pasting a value.
 
 :::caution
@@ -132,7 +132,7 @@ No check is done on the inserted value. If you wish to constrain it, make sure t
 ### setValue
 > Type: `(value: string, caretStart: number, caretEnd?: number) => void`<br/>
 
-Used to completely replace the current value with an [un-formatted]('./under-the-hood) text. 
+Used to completely replace the current value with an un-formatted text. 
 It also lets you define the new caret position after the operation.
 
 :::caution
