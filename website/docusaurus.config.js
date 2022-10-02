@@ -52,7 +52,7 @@ const config = {
             position: 'right',
           },
           {
-            href: 'https://www.npmjs.com/package/react-phone-number-input',
+            href: 'https://www.npmjs.com/package/react-formatted-input-hook',
             label: 'NPM',
             position: 'right',
           },

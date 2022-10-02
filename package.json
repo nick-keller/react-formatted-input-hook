@@ -1,12 +1,13 @@
 {
   "name": "react-formatted-input-hook",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Hooks to build formatted inputs the right way",
   "author": "Nicolas Keller (https://github.com/nick-keller)",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": "https://github.com/nick-keller/react-formatted-input-hook",
+  "homepage": "https://react-formatted-input-hook.netlify.app/",
   "files": [
     "dist/**/*"
   ],
