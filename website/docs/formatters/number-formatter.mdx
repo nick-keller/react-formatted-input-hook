@@ -1,0 +1,107 @@
+---
+sidebar_position: 1
+---
+import { NumberInput } from '@site/src/components/Inputs.tsx';
+
+# numberFormatter
+
+A completely customizable number formatter that can be used to build any scenario that requires the underlying value to be a plain *`number`*.
+Often used as a base for more complex formatters.
+
+<NumberInput defaultValue={1234} />
+
+## Controlled value
+
+### value
+> Type: `number | null`<br/>
+> Default: `null`
+
+Value of the input.
+
+### onChange
+> Type: `(value: { value: number | null; formattedValue: string }) => void`<br/>
+> Default: `undefined`
+
+The *`onChange`* callback is called when the value changes.
+
+### liveUpdate
+> Type: `boolean`<br/>
+> Default: `false`
+
+When *`false`* (default value), the *`onChange`* callback is only called on blur for improved performance. 
+If yo need the *`onChange`* callback to be called each time the user types a character, pass *`true`*.
+
+## Decimals
+
+### decimalSeparator
+> Type: `string`<br/>
+> Default: `'.'`
+
+Defines the character that should be used to separate decimals.
+
+### decimalSeparatorKeys
+> Type: `string[]`<br/>
+> Default: `['.', decimalSeparator]`
+
+Defines what keys can be pressed to type a decimal separator.
+By default, it uses the period and the `decimalSeparator` itself.
+
+### maxDecimals
+> Type: `number`<br/>
+> Default: `Infinity`
+
+Defines the maximum number of decimals allowed.
+
+### minDecimals
+> Type: `number`<br/>
+> Default: `0`
+
+Defines the minimum number of decimals, zeros will be added at the end if needed.
+
+### scale
+> Type: `number`<br/>
+> Default: `0`
+
+Defines the number of places to move the decimals by, can be positive or negative, a value of zero has no effect.
+
+## Grouping
+
+### groupingSeparator
+> Type: `string`<br/>
+> Default: `''`
+
+Defines the character that should be used to separate groups.
+
+### grouping
+> Type: `'thousand' | 'wan' | 'lakh'`<br/>
+> Default: `'thousand'`
+
+Defines how numbers should be grouped together, only relevant if `groupingSeparator` is defined.
+
+## Format
+
+### prefix
+> Type: `string`<br/>
+> Default: `''`
+
+Defines the string that should appear before the input.
+
+### suffix
+> Type: `string`<br/>
+> Default: `''`
+
+Defines the string that should appear after the input.
+
+## Constraints
+
+### max
+> Type: `number`<br/>
+> Default: `Infinity`
+
+Defines the maximum allowed value.
+
+### min
+> Type: `number`<br/>
+> Default: `-Infinity`
+
+Defines the minimum allowed value.

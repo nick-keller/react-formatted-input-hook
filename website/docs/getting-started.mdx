@@ -1,0 +1,38 @@
+---
+sidebar_position: 1
+---
+import { CurrencyInput } from '@site/src/components/Inputs.tsx';
+
+# Getting started
+
+Install react-formatted-input-hook using npm:
+```bash
+npm i react-formatted-input-hook
+```
+
+## Usage
+
+```tsx
+import { 
+  useFormattedInput, 
+  currencyFormatter 
+} from 'react-formatted-input-hook'
+
+const App = () => {
+  const [value, setValue] = useState<number | null>(null)
+  
+  const formattedInput = useFormattedInput(
+    currencyFormatter({
+      currency: 'EUR',
+      locales: 'de-DE',
+      value,
+      onChange: ({ value }) => setValue(value),
+    })
+  )
+
+  return <input {...formattedInput.props} />
+}
+```
+Try interacting with the input to see the formatting in action:
+
+<CurrencyInput defaultOptions={{currency:"EUR", locales:"de-DE"}} defaultValue={1234} simple />

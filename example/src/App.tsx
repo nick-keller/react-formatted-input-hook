@@ -1,5 +1,9 @@
 import { useState } from 'react'
-import { intlNumberFormatter, useFormattedInput } from '../../src'
+import {
+  intlNumberFormatter,
+  useFormattedInput,
+  numberFormatter,
+} from '../../src'
 
 function App() {
   const [value, setValue] = useState<number | null>(1234)

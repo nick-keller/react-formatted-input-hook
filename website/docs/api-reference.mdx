@@ -1,0 +1,140 @@
+---
+sidebar_position: 4
+---
+
+# API Reference
+
+The core of *react-formatted-input-hook* is the `useFormattedInput` hook. 
+It is the low level hook that handles all interactions with the input and offers
+a simpler interface for formatters to use.
+
+## Options
+
+The hook receives a `FormattedInputOptions` as only parameter, this is what all formatters return.
+
+### value
+> Type: `string`<br/>
+> Default: `''`
+
+The [un-formatted]('./under-the-hood) value that is used in the virtual input.
+
+### onChange
+> Type: `(value: { value: string; formattedValue: string }) => void`<br/>
+> Default: `undefined`
+
+Called when the value changes base on [liveUpdate](#liveupdate).
+- `value` is the un-formatted value
+- `formattedValue` is the formatted value shown in the input
+
+### liveUpdate
+> Type: `boolean`<br/>
+> Default: `false`
+
+When `false` (default value), the `onChange` callback is only called on blur for improved performance.
+If yo need the `onChange` callback to be called each time the user types a character, pass `true`.
+
+### onBlur
+> Type: `(value: string) => string`<br/>
+> Default: `(value) => value`
+
+This callback is called when the user blurs the input, and lets you update the [un-formatted]('./under-the-hood) value
+if necessary.
+
+Mostly used to clean up the value: remove unnecessary leading zeros, remove trailing decimal separator...
+
+### onKeyDown
+> Type: `(params) => void`<br/>
+> Default: `undefined`
+
+By default, all keys are ignored, it is up to the formatter to know what to do with each key press.
+
+To decide what to do with a key press, you can use: 
+
+- `params.key` which is the [*key*](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key) of the keyboard event
+- `params.value` which is the current value
+- `params.caret` which is the position of the caret: `{ left: number; right: number }`
+
+You then have 3 ways of updating the value based on the key:
+- `params.setCaret` which is the same as [setCaret](#setcaret)
+- `params.insert` which is the same as [insert](#insert)
+- `params.setValue` which is the same as [setValue](#setvalue)
+
+### onPaste
+> Type: `(params) => void`<br/>
+> Default: `undefined`
+
+This callback is called when the user tries to paste a value. 
+It works exactly like [onKeyDown](#onkeydown), but instead of `params.key` it has `params.clipboard`
+which is the string representation of the what the user is trying to paste
+
+### format
+> Type: `(value: string) => { formatted: string; mapping: number[] }`<br/>
+> Default: `undefined`
+
+This function is called to format the value. It returns both the formatted string,
+and a mapping to transform caret positions in the un-formatted string to the formatted one.
+
+Mapping is an array of numbers the size of 1 + the length of the un-formatted string.
+Its gives the index of each character in the formatted string.
+Let's consider the value "1234" that should be formatted as "$1,234":
+
+![alt](/img/mapping.svg)
+
+The length of themapping should be `1 + "1234".length` which is 5. Here the mapping would be `[1, 1, 3, 4, 5]` (notice that we repeated the first value to have a length of 5).
+
+The first value of the mapping is simply the same as the position of the first character (ie. here the first character "1" is mapped to index 1).
+It is needed because the un-formatted value could be empty, but we would sill need to know to pace the cursor after the dollar sign.
+
+For en empty string, the mapping is therefor an array of length 1, with the index of the first character if it existed. In our example it would be `[1]`.
+
+## Returned value
+
+It returns a `FormattedInput`, which is a simple object with a few properties.
+
+```ts
+const formattedInput = useFormattedInput({ /*...*/ })
+```
+
+### props
+> Type: `Record<string, any>`<br/>
+
+Should be spread on the input you which to handle:
+
+```tsx
+<input {...formattedInput.props} />
+```
+
+### setCaret
+> Type: `(start: number, end?: number) => void`<br/>
+
+Used to programmatically set the caret or selection. 
+
+Passing only one value will set the caret to that position:
+```ts
+formattedInput.setCaret(2)
+```
+
+Passing two values will select all characters in between:
+```ts
+formattedInput.setCaret(2, 5)
+```
+
+### insert
+> Type: `(text: string) => void`<br/>
+
+Used to insert [un-formatted]('./under-the-hood) text at caret. Caret will automatically be moved to the end on the inserted text, 
+just like it would when typing or pasting a value.
+
+:::caution
+No check is done on the inserted value. If you wish to constrain it, make sure to do it before calling `insert`.
+:::
+
+### setValue
+> Type: `(value: string, caretStart: number, caretEnd?: number) => void`<br/>
+
+Used to completely replace the current value with an [un-formatted]('./under-the-hood) text. 
+It also lets you define the new caret position after the operation.
+
+:::caution
+No check is done on the new value. If you wish to constrain it, make sure to do it before calling `setValue`.
+:::

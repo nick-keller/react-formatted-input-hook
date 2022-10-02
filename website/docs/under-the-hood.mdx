@@ -1,0 +1,25 @@
+---
+sidebar_position: 2
+---
+import { SideBySide } from '@site/src/components/SideBySide.tsx';
+import {CurrencyInput } from '@site/src/components/Inputs.tsx';
+
+# Why is RFIH better?
+
+Regular un-formatted inputs offer the best UX possible, the user is never surprised because it is trivial to predict what pressing a given key will do.
+All other formatting / masking solutions out there try to change what the user is typing in a flaky way, which is terrible for predictability and UX.
+
+## Our solution
+
+Our solution is straight forward: keep using an un-formatted input and display a fake-formatted input next to it:
+
+<SideBySide />
+
+
+:::tip
+Notice that no matter what you do on the real input, you cannot select the dollar sign, or place the cursor to the right of the coma on the fake input.
+:::
+
+Now if we only show the fake input, and keep the un-formatted input hidden, we end up with a formatted input that feels like a normal input.
+
+<CurrencyInput defaultOptions={{ currency: 'USD', locales: 'en-US'}} defaultValue={1234} simple />

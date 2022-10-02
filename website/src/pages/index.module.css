@@ -1,0 +1,32 @@
+.header {
+    background: var(--ifm-color-primary);
+    padding: 20px;
+}
+
+.headerContainer {
+    max-width: 530px;
+    margin: auto;
+    color: var(--ifm-font-color-base-inverse);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: start;
+}
+
+.headerContainer > * {
+    margin: 0;
+}
+
+.tagline {
+    font-size: 1.2em;
+    font-weight: normal;
+}
+
+.cta {
+    font-size: 1.2em;
+    color: var(--ifm-font-color-base-inverse);
+}
+
+.cta:hover {
+    color: var(--ifm-font-color-base-inverse);
+}

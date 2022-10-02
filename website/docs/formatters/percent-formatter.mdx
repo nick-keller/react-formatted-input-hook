@@ -1,0 +1,74 @@
+---
+sidebar_position: 3
+---
+import { PercentInput } from '@site/src/components/Inputs.tsx';
+
+# percentFormatter
+
+A thin wrapper around [`numberFormatter`](./number-formatter) that uses `locales` to deduce the formatting.
+
+<PercentInput defaultOptions={{ locales: "fr-FR"}} defaultValue={0.25} />
+
+
+## Controlled value
+
+### value
+> Type: `number | null`<br/>
+> Default: `null`
+
+Value of the input.
+
+### onChange
+> Type: `(value: { value: number | null; formattedValue: string }) => void`<br/>
+> Default: `undefined`
+
+The `onChange` callback is called when the value changes. It receives both the `formattedValue` and the `value`.
+
+### liveUpdate
+> Type: `boolean`<br/>
+> Default: `false`
+
+When `false` (default value), the `onChange` callback is only called on blur for improved performance.
+If yo need the `onChange` callback to be called each time the user types a character, pass `true`.
+
+## Decimals
+
+### maxDecimals
+> Type: `number`<br/>
+> Default: `Infinity`
+
+Defines the maximum number of decimals allowed.
+
+### minDecimals
+> Type: `number`<br/>
+> Default: `0`
+
+Defines the minimum number of decimals, zeros will be added at the end if needed.
+
+### scale
+> Type: `number`<br/>
+> Default: `-2`
+
+Defines the number of places to move the decimals by, can be positive or negative, a value of zero has no effect.
+
+## Format
+
+### locales
+> Type: `string | string[]`<br/>
+> Default: `undefined`
+
+A locale to use to deduce formatting from. Supports the same locales as Intl.
+
+## Constraints
+
+### max
+> Type: `number`<br/>
+> Default: `100`
+
+Defines the maximum allowed value.
+
+### min
+> Type: `number`<br/>
+> Default: `0`
+
+Defines the minimum allowed value.
