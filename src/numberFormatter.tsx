@@ -70,10 +70,7 @@ export const numberFormatter = ({
       value === null
         ? ''
         : constrainValue({
-            value:
-              scale === 0
-                ? String(value)
-                : (Math.pow(10, -scale) * value).toPrecision(15),
+            value: (Math.pow(10, -scale) * value).toPrecision(15),
             min,
             max,
             maxDecimals,
