@@ -6,6 +6,8 @@ import {
   useFormattedInput,
   percentFormatter,
   numberFormatter,
+  maskFormatter,
+  creditCardFormatter,
   NumberFormatterOptions,
 } from 'react-formatted-input-hook'
 import Select from 'react-select'
@@ -36,7 +38,8 @@ const magicInput = (
     defaultValue?: any
     choices?: string[]
     numberOptions?: NumberFormatterOptions
-  }[] = []
+  }[] = [],
+  props = {}
 ) => {
   return ({ defaultValue, defaultOptions = {}, simple = false }: Params) => {
     const [value, setValue] = useState(defaultValue)
@@ -67,7 +70,11 @@ const magicInput = (
                 )
                   .map(
                     ([option, value]) =>
-                      `    ${option}: ${JSON.stringify(value)},\n`
+                      `    ${option}: ${
+                        value instanceof RegExp
+                          ? String(value)
+                          : JSON.stringify(value)
+                      },\n`
                   )
                   .join('')}  })\n)`}</CodeBlock>
               </TabItem>
@@ -178,7 +185,7 @@ const magicInput = (
           </div>
         )}
         <div>
-          <input className="demo" {...formattedInput.props} />
+          <input className="demo" {...formattedInput.props} {...props} />
           {!simple && (
             <div style={{ marginTop: 10 }}>
               Value:{' '}
@@ -377,4 +384,23 @@ export const CurrencyInput = magicInput(
       defaultValue: null,
     },
   ]
+)
+export const MaskInput = magicInput(
+  maskFormatter,
+  'maskFormatter',
+  [
+    { name: 'liveUpdate', type: 'boolean', defaultValue: false },
+    { name: 'allowOverflow', type: 'boolean', defaultValue: false },
+    {
+      name: 'mask',
+      type: 'string',
+      defaultValue: '',
+    },
+    {
+      name: 'maskChar',
+      type: 'string',
+      defaultValue: '',
+    },
+  ],
+  { className: 'demo left' }
 )

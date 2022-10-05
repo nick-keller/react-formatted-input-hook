@@ -1,0 +1,74 @@
+---
+sidebar_position: 5
+---
+import {MaskInput } from '@site/src/components/Inputs.tsx';
+
+# maskFormatter
+
+A simple formatter the handle use cases where the value should be formatted according to a mask.
+
+<MaskInput defaultOptions={{ mask: '####-##-##', allowedChars: /[0-9]/ }} defaultValue="20201231" />
+
+
+## Controlled value
+
+### value
+> Type: `string`<br/>
+> Default: `''`
+
+Value of the input.
+
+### onChange
+> Type: `(value: { value: string; formattedValue: string }) => void`<br/>
+> Default: `undefined`
+
+The `onChange` callback is called when the value changes. It receives both the `formattedValue` and the `value`.
+
+### liveUpdate
+> Type: `boolean`<br/>
+> Default: `false`
+
+When `false` (default value), the `onChange` callback is only called on blur for improved performance.
+If yo need the `onChange` callback to be called each time the user types a character, pass `true`.
+
+## Mask
+
+### mask
+> Type: `string | ((value: string) => string)`<br/>
+> Default: `''`
+
+The mask the input should be formatted to. Use the [`maskChar`](#maskchar) character (default `'#'`) to define what the user will
+type, the rest is formatting. (eg. an ISO date would be **####-##-##**, a credit card number **#### #### #### ####**).
+
+you can also pass a function instead of a string if the mask depends on the value. For instance, a credit card number format depends on the first few digits.
+
+### maskChar
+> Type: `string`<br/>
+> Default: `'#'`
+
+Defines which character is used for masking. If you want to use the default `'#'` in your formatting, you would need to
+defined another character for `maskChar`:
+
+```ts
+maskFormatter({
+  mask: "___#___",
+  maskChar: '_'
+})
+```
+
+### allowedChars
+> Type: `RegExp`<br/>
+> Default: `/[a-z0-9]/i`
+
+Defines which characters are allowed to be typed, by default all letters and numbers.
+
+- Letters only: `/[a-z]/i`
+- Lowercase only: `/[a-z]/`
+- Uppercase only: `/[A-Z]/`
+- Numbers only: `/[0-9]/`
+
+### allowOverflow
+> Type: `boolean`<br/>
+> Default: `false`
+
+If you want the user to be able to continue typing after reaching the end of the mask, pass `true`, otherwise it will not be able to add more characters at the end of the mask.

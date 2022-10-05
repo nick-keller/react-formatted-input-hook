@@ -2,14 +2,13 @@ import { useState } from 'react'
 import {
   intlNumberFormatter,
   useFormattedInput,
-  numberFormatter,
+  creditCardFormatter,
 } from '../../src'
 
 function App() {
-  const [value, setValue] = useState<number | null>(1234)
+  const [value, setValue] = useState('')
   const formattedInput = useFormattedInput(
-    intlNumberFormatter({
-      locales: 'en-US',
+    creditCardFormatter({
       value,
       onChange: ({ value }) => setValue(value),
       liveUpdate: true,
