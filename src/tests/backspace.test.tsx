@@ -44,17 +44,6 @@ it('should delete reversed selection', async () => {
   expect(input).toHaveCaret('1|4')
 })
 
-it('should delete to the left of the cursor with CMD', async () => {
-  const { user, input } = await setup({
-    options: { value: 123456 },
-    caret: 3,
-  })
-
-  await user.keyboard('{Meta>}[Backspace]{/Meta}')
-
-  expect(input).toHaveCaret('|456')
-})
-
 it('should delete selection with CMD', async () => {
   const { user, input } = await setup({
     options: { value: 123456 },

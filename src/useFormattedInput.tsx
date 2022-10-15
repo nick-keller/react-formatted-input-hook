@@ -1,5 +1,6 @@
 import {
   ClipboardEventHandler,
+  DragEventHandler,
   FocusEventHandler,
   KeyboardEventHandler,
   MouseEventHandler,
@@ -8,37 +9,29 @@ import {
   useRef,
 } from 'react'
 import { clamp } from './utils'
-import {
-  FormatFn,
-  InsertFn,
-  OnKeyDownFn,
-  OnPasteFn,
-  SetCaretFn,
-  SetValueFn,
-} from './types'
+import { FormatFn, InsertFn, OnInsertFn, SetCaretFn, SetValueFn } from './types'
 
 export type FormattedInputOptions = {
   value?: string
-  onChange?: (value: { value: string; formattedValue: string }) => void
+  onChange?: (value: string, formattedValue: string) => void
   onBlur?: (value: string) => string
-  onKeyDown?: OnKeyDownFn
-  onPaste?: OnPasteFn
+  onInsert?: OnInsertFn
   liveUpdate?: boolean
   format?: FormatFn
 }
 
-export type InputState = Required<
+type InternalInputState = Required<
   Pick<
     FormattedInputOptions,
-    'onChange' | 'value' | 'onKeyDown' | 'format' | 'onBlur' | 'onPaste'
+    'onChange' | 'value' | 'onInsert' | 'format' | 'onBlur'
   >
 > & {
   caretStart: number
   caretEnd: number
-  selectAllOnFocus: boolean
 }
 
-const updateDom = (input: HTMLInputElement, state: InputState) => {
+// A function to render an InternalInputState to an HTMLInputElement
+const updateDom = (input: HTMLInputElement, state: InternalInputState) => {
   const caretLeft = Math.min(state.caretStart, state.caretEnd)
   const caretRight = Math.max(state.caretStart, state.caretEnd)
 
@@ -85,27 +78,25 @@ export const useFormattedInput = ({
   value = '',
   onChange = defaultNullFn,
   onBlur: blurHandler = defaultIdentityFn,
-  onKeyDown: keyDownHandler = defaultNullFn,
-  onPaste: pasteHandler = defaultNullFn,
+  onInsert = defaultNullFn,
   liveUpdate = false,
   format = defaultFormat,
 }: FormattedInputOptions = {}) => {
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Use a ref to manage internal state to minimize re-renders
-  const state = useRef<InputState>({
+  const state = useRef<InternalInputState>({
     value,
-    onKeyDown: keyDownHandler,
+    onInsert,
     onBlur: blurHandler,
-    onPaste: pasteHandler,
     onChange,
     format,
     caretStart: 0,
     caretEnd: 0,
-    selectAllOnFocus: true,
   })
 
-  state.current.onKeyDown = keyDownHandler
+  // Keep ref in sync with props
+  state.current.onInsert = onInsert
   state.current.onChange = onChange
   state.current.onBlur = blurHandler
   state.current.format = format
@@ -173,20 +164,6 @@ export const useFormattedInput = ({
         return
       }
 
-      if (
-        event.key === 'Tab' ||
-        event.key === 'Enter' ||
-        event.key === 'Escape'
-      ) {
-        // Do nothing, let the browser handle it
-        return
-      }
-
-      // Do not prevent CMD or CTRL keypress
-      if (!event.metaKey && !event.ctrlKey && !event.altKey) {
-        event.preventDefault()
-      }
-
       const caretLeft = Math.min(
         state.current.caretStart,
         state.current.caretEnd
@@ -195,49 +172,17 @@ export const useFormattedInput = ({
         state.current.caretStart,
         state.current.caretEnd
       )
-      const caretLength = caretRight - caretLeft
-      const previousValue = state.current.value
+      // const caretLength = caretRight - caretLeft
+      // const previousValue = state.current.value
 
       if (event.key === 'a' && (event.ctrlKey || event.metaKey)) {
         event.preventDefault()
 
         setCaret(0, state.current.value.length)
-      } else if (event.key === 'Backspace') {
-        event.preventDefault()
-
-        if (caretLength !== 0) {
-          state.current.value =
-            state.current.value.slice(0, caretLeft) +
-            state.current.value.slice(caretRight)
-          setCaret(caretLeft)
-        } else if (event.metaKey) {
-          state.current.value = state.current.value.slice(caretLeft)
-          setCaret(0)
-        } else {
-          state.current.value =
-            state.current.value.slice(0, Math.max(0, caretLeft - 1)) +
-            state.current.value.slice(caretRight)
-          setCaret(caretLeft - 1)
-        }
-      } else if (event.key === 'Delete') {
-        event.preventDefault()
-
-        if (event.metaKey) {
-          // Do nothing
-        } else if (caretLength !== 0) {
-          state.current.value =
-            state.current.value.slice(0, caretLeft) +
-            state.current.value.slice(caretRight)
-          setCaret(caretLeft)
-        } else {
-          state.current.value =
-            state.current.value.slice(0, caretLeft) +
-            state.current.value.slice(caretRight + 1)
-          setCaret(caretLeft)
-        }
       } else if (
         (event.key === 'ArrowLeft' || event.key === 'ArrowRight') &&
-        !event.metaKey
+        !event.metaKey &&
+        !event.altKey
       ) {
         event.preventDefault()
 
@@ -253,7 +198,7 @@ export const useFormattedInput = ({
       } else if (
         event.key === 'Home' ||
         event.key === 'ArrowUp' ||
-        (event.key === 'ArrowLeft' && event.metaKey)
+        (event.key === 'ArrowLeft' && (event.metaKey || event.altKey))
       ) {
         event.preventDefault()
 
@@ -265,7 +210,7 @@ export const useFormattedInput = ({
       } else if (
         event.key === 'End' ||
         event.key === 'ArrowDown' ||
-        (event.key === 'ArrowRight' && event.metaKey)
+        (event.key === 'ArrowRight' && (event.metaKey || event.altKey))
       ) {
         event.preventDefault()
 
@@ -274,31 +219,16 @@ export const useFormattedInput = ({
         } else {
           setCaret(state.current.value.length)
         }
-      } else if (!event.metaKey && !event.ctrlKey && !event.altKey) {
-        event.preventDefault()
-
-        state.current.onKeyDown({
-          key: event.key,
-          insert,
-          setCaret,
-          value: state.current.value,
-          caret: { left: caretLeft, right: caretRight },
-          setValue,
-        })
-      }
-
-      if (previousValue !== state.current.value && liveUpdate) {
-        state.current.onChange({
-          value: state.current.value,
-          formattedValue: inputRef.current.value,
-        })
       }
     },
-    [insert, liveUpdate, setCaret, setValue]
+    [setCaret]
   )
 
   const onFocus = useCallback<FocusEventHandler<HTMLInputElement>>(() => {
-    if (state.current.selectAllOnFocus) {
+    if (
+      inputRef.current?.selectionStart === 0 &&
+      inputRef.current?.selectionEnd === inputRef.current?.value.length
+    ) {
       setCaret(0, state.current.value.length)
     }
   }, [setCaret])
@@ -308,25 +238,17 @@ export const useFormattedInput = ({
       return
     }
 
-    state.current.selectAllOnFocus = true
-
     const previousValue = state.current.value
     state.current.value = state.current.onBlur(previousValue)
 
     updateDom(inputRef.current, state.current)
 
     if (previousValue !== state.current.value || !liveUpdate) {
-      state.current.onChange({
-        value: state.current.value,
-        formattedValue: inputRef.current.value,
-      })
+      state.current.onChange(state.current.value, inputRef.current.value)
     }
   }, [liveUpdate])
 
   const onMouseDown = useCallback<MouseEventHandler<HTMLInputElement>>(() => {
-    // Prevent onFocus from selecting all text
-    state.current.selectAllOnFocus = false
-
     // Wait for the selection to be confirmed
     requestAnimationFrame(() => {
       const { mapping } = state.current.format(state.current.value)
@@ -340,7 +262,7 @@ export const useFormattedInput = ({
     })
   }, [setCaret])
 
-  // On mouse up constrain selection
+  // On mouse up: constrain selection
   useEffect(() => {
     const listener = () => {
       requestAnimationFrame(() => {
@@ -360,14 +282,143 @@ export const useFormattedInput = ({
     return () => document.removeEventListener('mouseup', listener)
   }, [setCaret])
 
+  useEffect(() => {
+    const listener = (event: InputEvent) => {
+      event.preventDefault()
+
+      const { mapping } = state.current.format(state.current.value)
+
+      const caretLeft = getCursorPosition(
+        mapping,
+        inputRef.current?.selectionStart ?? 0
+      )
+      const caretRight = getCursorPosition(
+        mapping,
+        inputRef.current?.selectionEnd ?? 0
+      )
+
+      state.current.caretStart = caretLeft
+      state.current.caretEnd = caretRight
+      const caretLength = caretRight - caretLeft
+      const previousValue = state.current.value
+
+      const deleteSelection = () => {
+        state.current.value =
+          state.current.value.slice(0, caretLeft) +
+          state.current.value.slice(caretRight)
+        setCaret(caretLeft)
+      }
+
+      if (
+        (event.inputType === 'insertText' ||
+          event.inputType === 'insertReplacementText' ||
+          event.inputType === 'insertFromDrop' ||
+          event.inputType === 'insertFromPaste' ||
+          event.inputType === 'insertFromPasteAsQuotation' ||
+          event.inputType === 'insertCompositionText') &&
+        event.data
+      ) {
+        for (let i = 0; i < event.data.length; i++) {
+          state.current.onInsert({
+            value: state.current.value,
+            char: event.data[i],
+            insert,
+            setCaret,
+            caret: {
+              left: state.current.caretStart,
+              right: state.current.caretEnd,
+            },
+            setValue,
+          })
+        }
+
+        if (event.inputType === 'insertFromDrop') {
+          setCaret(caretLeft, caretLeft + event.data.length)
+        }
+      } else if (
+        event.inputType === 'deleteContentBackward' ||
+        event.inputType === 'deleteByDrag' ||
+        event.inputType === 'deleteByCut' ||
+        event.inputType === 'deleteContent'
+      ) {
+        if (caretLength !== 0) {
+          deleteSelection()
+        } else {
+          state.current.value =
+            state.current.value.slice(0, Math.max(0, caretLeft - 1)) +
+            state.current.value.slice(caretRight)
+          setCaret(caretLeft - 1)
+        }
+      } else if (event.inputType === 'deleteContentForward') {
+        if (caretLength !== 0) {
+          deleteSelection()
+        } else {
+          state.current.value =
+            state.current.value.slice(0, caretLeft) +
+            state.current.value.slice(caretRight + 1)
+          setCaret(caretLeft)
+        }
+      } else if (
+        event.inputType === 'deleteWordBackward' ||
+        event.inputType === 'deleteSoftLineBackward' ||
+        event.inputType === 'deleteHardLineBackward'
+      ) {
+        if (caretLength !== 0) {
+          deleteSelection()
+        } else {
+          state.current.value = state.current.value.slice(caretLeft)
+          setCaret(0)
+        }
+      } else if (
+        event.inputType === 'deleteWordForward' ||
+        event.inputType === 'deleteSoftLineForward' ||
+        event.inputType === 'deleteHardLineForward'
+      ) {
+        if (caretLength !== 0) {
+          deleteSelection()
+        } else {
+          state.current.value = state.current.value.slice(0, caretLeft)
+          setCaret(caretLeft)
+        }
+      } else if (event.inputType === 'deleteEntireSoftLine') {
+        if (caretLength !== 0) {
+          deleteSelection()
+        } else {
+          state.current.value = ''
+          setCaret(0)
+        }
+      }
+
+      if (previousValue !== state.current.value && liveUpdate) {
+        state.current.onChange(
+          state.current.value,
+          inputRef.current?.value ?? ''
+        )
+      }
+    }
+
+    const input = inputRef.current
+    input?.addEventListener('beforeinput', listener)
+
+    return () => input?.removeEventListener('beforeinput', listener)
+  }, [insert, liveUpdate, setCaret, setValue])
+
   const onCopy = useCallback<ClipboardEventHandler<HTMLInputElement>>(
     (event) => {
+      const { mapping } = state.current.format(state.current.value)
+
+      const caretLeft = getCursorPosition(
+        mapping,
+        inputRef.current?.selectionStart ?? 0
+      )
+      const caretRight = getCursorPosition(
+        mapping,
+        inputRef.current?.selectionEnd ?? 0
+      )
+
       event.clipboardData.setData(
         'text/plain',
-        state.current.value.slice(
-          Math.min(state.current.caretStart, state.current.caretEnd),
-          Math.max(state.current.caretStart, state.current.caretEnd)
-        )
+        state.current.value.slice(caretLeft, caretRight)
       )
       event.preventDefault()
     },
@@ -376,13 +427,15 @@ export const useFormattedInput = ({
 
   const onCut = useCallback<ClipboardEventHandler<HTMLInputElement>>(
     (event) => {
-      const caretLeft = Math.min(
-        state.current.caretStart,
-        state.current.caretEnd
+      const { mapping } = state.current.format(state.current.value)
+
+      const caretLeft = getCursorPosition(
+        mapping,
+        inputRef.current?.selectionStart ?? 0
       )
-      const caretRight = Math.max(
-        state.current.caretStart,
-        state.current.caretEnd
+      const caretRight = getCursorPosition(
+        mapping,
+        inputRef.current?.selectionEnd ?? 0
       )
 
       event.clipboardData.setData(
@@ -397,40 +450,61 @@ export const useFormattedInput = ({
       setCaret(caretLeft)
 
       if (caretLeft !== caretRight && liveUpdate) {
-        state.current.onChange({
-          value: state.current.value,
-          formattedValue: inputRef.current?.value ?? '',
-        })
+        state.current.onChange(
+          state.current.value,
+          inputRef.current?.value ?? ''
+        )
       }
     },
     [liveUpdate, setCaret]
   )
 
-  const onPaste = useCallback<ClipboardEventHandler<HTMLInputElement>>(
+  const onDragStart = useCallback<DragEventHandler<HTMLInputElement>>(
     (event) => {
-      event.preventDefault()
+      const { mapping } = state.current.format(state.current.value)
 
-      state.current.onPaste({
-        clipboard: event.clipboardData.getData('text/plain'),
-        insert,
-        setCaret,
-        value: state.current.value,
-        caret: {
-          left: Math.min(state.current.caretStart, state.current.caretEnd),
-          right: Math.max(state.current.caretStart, state.current.caretEnd),
-        },
-        setValue,
-      })
+      const caretLeft = getCursorPosition(
+        mapping,
+        inputRef.current?.selectionStart ?? 0
+      )
+      const caretRight = getCursorPosition(
+        mapping,
+        inputRef.current?.selectionEnd ?? 0
+      )
 
-      if (liveUpdate) {
-        state.current.onChange({
-          value: state.current.value,
-          formattedValue: inputRef.current?.value ?? '',
-        })
-      }
+      event.dataTransfer.setData(
+        'text/plain',
+        state.current.value.slice(caretLeft, caretRight)
+      )
     },
-    [insert, liveUpdate, setCaret, setValue]
+    []
   )
+  //
+  // const onPaste = useCallback<ClipboardEventHandler<HTMLInputElement>>(
+  //   (event) => {
+  //     event.preventDefault()
+  //
+  //     state.current.onPaste({
+  //       clipboard: event.clipboardData.getData('text/plain'),
+  //       insert,
+  //       setCaret,
+  //       value: state.current.value,
+  //       caret: {
+  //         left: Math.min(state.current.caretStart, state.current.caretEnd),
+  //         right: Math.max(state.current.caretStart, state.current.caretEnd),
+  //       },
+  //       setValue,
+  //     })
+  //
+  //     if (liveUpdate) {
+  //       state.current.onChange({
+  //         value: state.current.value,
+  //         formattedValue: inputRef.current?.value ?? '',
+  //       })
+  //     }
+  //   },
+  //   [insert, liveUpdate, setCaret, setValue]
+  // )
 
   return {
     props: {
@@ -441,7 +515,7 @@ export const useFormattedInput = ({
       onMouseDown,
       onCopy,
       onCut,
-      onPaste,
+      onDragStart,
     },
     setCaret,
     insert,

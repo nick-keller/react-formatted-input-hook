@@ -18,7 +18,7 @@ it('should not call onChange with negative zero on blur', async () => {
     input.blur()
   })
 
-  expect(onChange).toHaveBeenCalledWith({ formattedValue: '0', value: 0 })
+  expect(onChange).toHaveBeenCalledWith(0, '0')
   expect(input).toHaveValue('0')
 })
 
@@ -33,13 +33,13 @@ it('should not call onChange with negative zero as user types', async () => {
 
   await user.keyboard('-')
 
-  expect(onChange).toHaveBeenCalledWith({ formattedValue: '-', value: null })
+  expect(onChange).toHaveBeenCalledWith(null, '-')
   onChange.mockClear()
   expect(input).toHaveValue('-')
 
   await user.keyboard('0')
 
-  expect(onChange).toHaveBeenCalledWith({ formattedValue: '-0', value: 0 })
+  expect(onChange).toHaveBeenCalledWith(0, '-0')
   onChange.mockClear()
   expect(input).toHaveValue('-0')
 
@@ -47,6 +47,6 @@ it('should not call onChange with negative zero as user types', async () => {
     input.blur()
   })
 
-  expect(onChange).toHaveBeenCalledWith({ formattedValue: '0', value: 0 })
+  expect(onChange).toHaveBeenCalledWith(0, '0')
   expect(input).toHaveValue('0')
 })

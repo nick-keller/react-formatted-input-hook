@@ -20,9 +20,9 @@ const WrapperComponent = ({
   const numberInput = useFormattedInput(
     numberFormatter({
       ...options,
-      onChange: (arg) => {
-        onChange?.(arg)
-        setValue(arg.value)
+      onChange: (value, formattedValue) => {
+        onChange?.(value, formattedValue)
+        setValue(value)
       },
       value,
     })

@@ -1,23 +1,58 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   intlNumberFormatter,
   useFormattedInput,
+  maskFormatter,
   creditCardFormatter,
 } from '../../src'
 
 function App() {
-  const [value, setValue] = useState('')
+  const [x, setX] = useState(null)
+  const [value, setValue] = useState<null | number>(null)
   const formattedInput = useFormattedInput(
-    creditCardFormatter({
+    intlNumberFormatter({
+      locales: 'en-US',
       value,
-      onChange: ({ value }) => setValue(value),
+      onChange: setValue,
       liveUpdate: true,
     })
   )
 
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const listener = (event) => {
+      console.log(event)
+      setX({
+        d: event.data,
+        it: event.inputType,
+        s: [inputRef.current?.selectionStart, inputRef.current?.selectionEnd],
+        v: inputRef.current?.value,
+      })
+    }
+
+    const input = inputRef.current
+    input?.addEventListener('beforeinput', listener)
+
+    return () => input?.removeEventListener('beforeinput', listener)
+  }, [])
+
+  useEffect(() => {
+    const listener = (event) => {
+      setX({
+        s: [inputRef.current?.selectionStart, inputRef.current?.selectionEnd],
+      })
+    }
+
+    document?.addEventListener('selectionchange', listener)
+
+    return () => document?.removeEventListener('selectionchange', listener)
+  }, [])
+
   return (
     <main>
-      <input />
+      <pre>{JSON.stringify(x, null, 2)}</pre>
+      <input ref={inputRef} />
       <input {...formattedInput.props} />
       <span>Value: {JSON.stringify(value)}</span>
       <input />

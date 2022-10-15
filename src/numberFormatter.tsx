@@ -17,7 +17,7 @@ export type NumberFormatterOptions = Pick<
   maxDecimals?: number
   minDecimals?: number
   value?: number | null
-  onChange?: (value: { value: number | null; formattedValue: string }) => void
+  onChange?: (value: number | null, formattedValue: string) => void
 }
 
 const constrainValue = ({
@@ -76,13 +76,13 @@ export const numberFormatter = ({
             maxDecimals,
             minDecimals,
           }),
-    onKeyDown: ({ key, insert, caret, value }) => {
+    onInsert: ({ char, insert, caret, value }) => {
       // Cannot type to the left of minus sign
       if (value[caret.right] === '-') {
         return
       }
 
-      if (key.match(/^[0-9]$/)) {
+      if (char.match(/^[0-9]$/)) {
         const decimalsStart = value.indexOf('.')
 
         // If user types a number after the decimal point
@@ -94,22 +94,22 @@ export const numberFormatter = ({
             caret.right !== value.length ||
             caret.left - decimalsStart - 1 < maxDecimals
           ) {
-            insert(key)
+            insert(char)
           }
         } else {
-          insert(key)
+          insert(char)
         }
       }
 
       // Only allow typing minus :
       // - at the start of the input
       // - negative numbers are allowed
-      if (key === '-' && caret.left === 0 && min < 0) {
+      if (char === '-' && caret.left === 0 && min < 0) {
         insert('-')
       }
 
       if (
-        decimalSeparatorKeys.includes(key) &&
+        decimalSeparatorKeys.includes(char) &&
         !value.slice(0, caret.left).includes('.') &&
         !value.slice(caret.right).includes('.') &&
         maxDecimals > 0
@@ -160,62 +160,29 @@ export const numberFormatter = ({
     },
     onBlur: (value) =>
       constrainValue({ max, maxDecimals, minDecimals, min, value }),
-    onChange: ({ value, formattedValue }) =>
-      onChange({
-        value:
-          value === '' || isNaN(Number(value))
-            ? null
-            : Number(
-                (
-                  Math.pow(10, scale) *
-                  clamp(
-                    Number(
-                      maxDecimals > 0 && maxDecimals !== Infinity
-                        ? value.replace(
-                            new RegExp(`(\\.[0-9]{0,${maxDecimals}}).*$`),
-                            '$1'
-                          )
-                        : value
-                    ) + 0,
-                    min,
-                    max
-                  )
-                ).toPrecision(15)
-              ),
-        formattedValue,
-      }),
-    onPaste: ({ clipboard, setValue, value, caret }) => {
-      if (value[caret.right] === '-') {
-        return
-      }
-
-      let pasteValue = clipboard.replace(/([^0-9.-]|(?<!^)-)/g, '')
-      const [before, after] = pasteValue.split('.') as [
-        string,
-        string | undefined
-      ]
-      pasteValue = before
-
-      if (
-        typeof after === 'string' &&
-        maxDecimals > 0 &&
-        !value.slice(0, caret.left).includes('.') &&
-        !value.slice(caret.right).includes('.')
-      ) {
-        pasteValue += '.' + after
-      }
-
-      if (min >= 0 || caret.left !== 0) {
-        pasteValue = pasteValue.replace(/-/, '')
-      }
-
-      let newValue =
-        value.slice(0, caret.left) + pasteValue + value.slice(caret.right)
-
-      newValue = newValue.replace(/(?<![0-9])\./, '0.')
-
-      setValue(newValue, newValue.length - value.length + caret.right)
-    },
+    onChange: (value, formattedValue) =>
+      onChange(
+        value === '' || isNaN(Number(value))
+          ? null
+          : Number(
+              (
+                Math.pow(10, scale) *
+                clamp(
+                  Number(
+                    maxDecimals > 0 && maxDecimals !== Infinity
+                      ? value.replace(
+                          new RegExp(`(\\.[0-9]{0,${maxDecimals}}).*$`),
+                          '$1'
+                        )
+                      : value
+                  ) + 0,
+                  min,
+                  max
+                )
+              ).toPrecision(15)
+            ),
+        formattedValue
+      ),
     liveUpdate,
   }
 }

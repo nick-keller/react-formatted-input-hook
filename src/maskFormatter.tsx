@@ -21,19 +21,18 @@ export const maskFormatter = ({
 }: MaskFormatterOptions = {}): FormattedInputOptions => {
   return {
     value: value,
-    onKeyDown: ({ key, insert, caret, value }) => {
+    onInsert: ({ char, insert, caret, value }) => {
       const getMask = typeof mask === 'function' ? mask : () => mask
       const maxLength = (getMask(value).match(new RegExp(maskChar, 'g')) ?? [])
         .length
 
       if (
-        key.length === 1 &&
-        key.match(allowedChars) &&
+        char.match(allowedChars) &&
         (allowOverflow ||
           caret.right !== value.length ||
           caret.left < maxLength)
       ) {
-        insert(key)
+        insert(char)
       }
     },
     format: (value) => {
@@ -79,9 +78,6 @@ export const maskFormatter = ({
       }
     },
     onChange: onChange,
-    onPaste: ({ clipboard, insert }) => {
-      insert(clipboard)
-    },
     liveUpdate,
   }
 }

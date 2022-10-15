@@ -30,7 +30,7 @@ it('should call onChange on blur by default', async () => {
     input.blur()
   })
 
-  expect(onChange).toHaveBeenCalledWith({ formattedValue: '123 %', value: 123 })
+  expect(onChange).toHaveBeenCalledWith(123, '123 %')
 })
 
 it('should call onChange on each stroke', async () => {
@@ -45,12 +45,12 @@ it('should call onChange on each stroke', async () => {
 
   await user.keyboard('1')
 
-  expect(onChange).toHaveBeenCalledWith({ formattedValue: '$ 1', value: 1 })
+  expect(onChange).toHaveBeenCalledWith(1, '$ 1')
   onChange.mockClear()
 
   await user.keyboard('2')
 
-  expect(onChange).toHaveBeenCalledWith({ formattedValue: '$ 12', value: 12 })
+  expect(onChange).toHaveBeenCalledWith(12, '$ 12')
   onChange.mockClear()
 
   act(() => {
@@ -71,13 +71,13 @@ it('should call onChange on blur if it changes', async () => {
   })
 
   await user.keyboard('12')
-  expect(onChange).toHaveBeenCalledWith({ formattedValue: '12', value: 12 })
+  expect(onChange).toHaveBeenCalledWith(12, '12')
 
   act(() => {
     input.blur()
   })
 
-  expect(onChange).toHaveBeenCalledWith({ formattedValue: '12.00', value: 12 })
+  expect(onChange).toHaveBeenCalledWith(12, '12.00')
 })
 
 it('should have null value when empty', async () => {
@@ -93,7 +93,7 @@ it('should have null value when empty', async () => {
     input.blur()
   })
 
-  expect(onChange).toHaveBeenCalledWith({ formattedValue: '', value: null })
+  expect(onChange).toHaveBeenCalledWith(null, '')
 })
 
 it('should have null value when deleting the last character', async () => {
@@ -109,7 +109,7 @@ it('should have null value when deleting the last character', async () => {
 
   await user.keyboard('[Backspace]')
 
-  expect(onChange).toHaveBeenCalledWith({ formattedValue: '', value: null })
+  expect(onChange).toHaveBeenCalledWith(null, '')
 })
 
 it('should have null value when invalid input', async () => {
@@ -128,7 +128,7 @@ it('should have null value when invalid input', async () => {
   })
 
   expect(input).toHaveValue('')
-  expect(onChange).toHaveBeenCalledWith({ formattedValue: '', value: null })
+  expect(onChange).toHaveBeenCalledWith(null, '')
 })
 
 it('should have null value when typing invalid input', async () => {
@@ -142,14 +142,14 @@ it('should have null value when typing invalid input', async () => {
 
   await user.keyboard('-')
 
-  expect(onChange).toHaveBeenCalledWith({ formattedValue: '-', value: null })
+  expect(onChange).toHaveBeenCalledWith(null, '-')
 
   act(() => {
     input.blur()
   })
 
   expect(input).toHaveValue('')
-  expect(onChange).toHaveBeenCalledWith({ formattedValue: '', value: null })
+  expect(onChange).toHaveBeenCalledWith(null, '')
 })
 
 it('should not call onChange with too many decimals', async () => {
@@ -170,7 +170,7 @@ it('should not call onChange with too many decimals', async () => {
   })
 
   expect(input).toHaveValue('1.24')
-  expect(onChange).toHaveBeenCalledWith({ formattedValue: '1.24', value: 1.24 })
+  expect(onChange).toHaveBeenCalledWith(1.24, '1.24')
 })
 
 it('should not call onChange with too many decimals with live update', async () => {
@@ -187,22 +187,16 @@ it('should not call onChange with too many decimals with live update', async () 
 
   await user.keyboard('4')
   expect(input).toHaveValue('1.243')
-  expect(onChange).toHaveBeenCalledWith({
-    formattedValue: '1.243',
-    value: 1.24,
-  })
+  expect(onChange).toHaveBeenCalledWith(1.24, '1.243')
 
   await user.keyboard('5')
   expect(input).toHaveValue('1.2453')
-  expect(onChange).toHaveBeenCalledWith({
-    formattedValue: '1.2453',
-    value: 1.24,
-  })
+  expect(onChange).toHaveBeenCalledWith(1.24, '1.2453')
 
   act(() => {
     input.blur()
   })
 
   expect(input).toHaveValue('1.24')
-  expect(onChange).toHaveBeenCalledWith({ formattedValue: '1.24', value: 1.24 })
+  expect(onChange).toHaveBeenCalledWith(1.24, '1.24')
 })

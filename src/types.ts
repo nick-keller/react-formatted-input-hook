@@ -10,20 +10,9 @@ export type SetValueFn = (
 
 export type SetCaretFn = (start: number, end?: number) => void
 
-export type OnKeyDownFn = (
+export type OnInsertFn = (
   params: Readonly<{
-    key: KeyboardEvent<HTMLInputElement>['key']
-    insert: InsertFn
-    setCaret: SetCaretFn
-    setValue: SetValueFn
-    value: string
-    caret: { left: number; right: number }
-  }>
-) => void
-
-export type OnPasteFn = (
-  params: Readonly<{
-    clipboard: string
+    char: string
     insert: InsertFn
     setCaret: SetCaretFn
     setValue: SetValueFn

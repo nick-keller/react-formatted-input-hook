@@ -40,10 +40,7 @@ it('should call onChange with the right value with a positive scale', async () =
     input.blur()
   })
 
-  expect(onChange).toHaveBeenCalledWith({
-    formattedValue: '123',
-    value: 1230000,
-  })
+  expect(onChange).toHaveBeenCalledWith(1230000, '123')
 })
 
 it('should call onChange with the right value with a negative scale', async () => {
@@ -61,8 +58,5 @@ it('should call onChange with the right value with a negative scale', async () =
     input.blur()
   })
 
-  expect(onChange).toHaveBeenCalledWith({
-    formattedValue: '33.3',
-    value: 0.333,
-  })
+  expect(onChange).toHaveBeenCalledWith(0.333, '33.3')
 })
