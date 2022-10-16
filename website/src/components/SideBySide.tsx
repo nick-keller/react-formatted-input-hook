@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { currencyFormatter } from 'react-formatted-input-hook'
 import BrowserOnly from '@docusaurus/BrowserOnly'
 
@@ -37,6 +37,16 @@ const SideBySideBrowser = () => {
     }
   }
 
+  useEffect(() => {
+    const listener = () => {
+      reRender((x) => x + 1)
+    }
+
+    document.addEventListener('selectionchange', listener)
+
+    return () => document.removeEventListener('selectionchange', listener)
+  }, [])
+
   return (
     <div style={{ marginBottom: 20 }}>
       <input
@@ -50,11 +60,6 @@ const SideBySideBrowser = () => {
           setValue(onBlur(event.target.value))
           reRender((x) => x + 1)
         }}
-        onMouseDown={() => reRender((x) => x + 1)}
-        onMouseUp={() => reRender((x) => x + 1)}
-        onMouseMove={() => reRender((x) => x + 1)}
-        onKeyDown={() => reRender((x) => x + 1)}
-        onKeyUp={() => reRender((x) => x + 1)}
       />
       <span className="demo" style={{ width: '100vw', maxWidth: 250 }}>
         {formatted.split('').map((c, i) => (
