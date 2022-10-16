@@ -1,6 +1,6 @@
 {
   "name": "react-formatted-input-hook",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Hooks to build formatted inputs the right way",
   "author": "Nicolas Keller (https://github.com/nick-keller)",
   "license": "MIT",

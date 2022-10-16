@@ -6,7 +6,7 @@ import { NumberInput } from '@site/src/components/Inputs.tsx';
 # numberFormatter
 
 A completely customizable number formatter that can be used to build any scenario that requires the underlying value to be a plain *`number`*.
-Often used as a base for more complex formatters.
+Often used as a base for more complex formatters, if you want to format numbers according to a specific locale, use [intlNumberFormatter](./intl-number-formatter) instead which is a wrapper of this formatter.
 
 <NumberInput defaultValue={1234} />
 
@@ -19,7 +19,7 @@ Often used as a base for more complex formatters.
 Value of the input.
 
 ### onChange
-> Type: `(value: { value: number | null; formattedValue: string }) => void`<br/>
+> Type: `(value: number | null, formattedValue: string) => void`<br/>
 > Default: `undefined`
 
 The *`onChange`* callback is called when the value changes.

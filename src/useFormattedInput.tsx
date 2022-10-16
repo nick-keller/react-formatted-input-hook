@@ -479,32 +479,6 @@ export const useFormattedInput = ({
     },
     []
   )
-  //
-  // const onPaste = useCallback<ClipboardEventHandler<HTMLInputElement>>(
-  //   (event) => {
-  //     event.preventDefault()
-  //
-  //     state.current.onPaste({
-  //       clipboard: event.clipboardData.getData('text/plain'),
-  //       insert,
-  //       setCaret,
-  //       value: state.current.value,
-  //       caret: {
-  //         left: Math.min(state.current.caretStart, state.current.caretEnd),
-  //         right: Math.max(state.current.caretStart, state.current.caretEnd),
-  //       },
-  //       setValue,
-  //     })
-  //
-  //     if (liveUpdate) {
-  //       state.current.onChange({
-  //         value: state.current.value,
-  //         formattedValue: inputRef.current?.value ?? '',
-  //       })
-  //     }
-  //   },
-  //   [insert, liveUpdate, setCaret, setValue]
-  // )
 
   return {
     props: {

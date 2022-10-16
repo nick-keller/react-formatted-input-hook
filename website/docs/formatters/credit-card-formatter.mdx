@@ -1,0 +1,40 @@
+---
+sidebar_position: 6
+---
+import {CreditCardInput } from '@site/src/components/Inputs.tsx';
+
+# creditCardFormatter
+
+A formatter for credit card numbers. It formats the input based on the issuer of the card according to [this table](https://baymard.com/checkout-usability/credit-card-patterns).
+Try inputting a number that start with 34 for instance.
+
+<CreditCardInput defaultValue="4242424242424242" />
+
+
+## Controlled value
+
+### value
+> Type: `string`<br/>
+> Default: `''`
+
+Value of the input.
+
+### onChange
+> Type: `(value: string, formattedValue: string) => void`<br/>
+> Default: `undefined`
+
+The `onChange` callback is called when the value changes. It receives both the `formattedValue` and the `value`.
+
+### liveUpdate
+> Type: `boolean`<br/>
+> Default: `false`
+
+When `false` (default value), the `onChange` callback is only called on blur for improved performance.
+If yo need the `onChange` callback to be called each time the user types a character, pass `true`.
+
+### allowOverflow
+> Type: `boolean`<br/>
+> Default: `true`
+
+If you want the user not to be able to continue typing after reaching the end of the mask, pass `false`.
+It is recommended to keep the default value.

@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   currencyFormatter,
   intlNumberFormatter,
@@ -49,15 +49,18 @@ const magicInput = (
       formatter({
         ...options,
         value,
-        onChange: ({ value }) => {
+        onChange: (value) => {
           setValue(value)
         },
       })
     )
 
+    const formattedInputRef = useRef(formattedInput)
+    formattedInputRef.current = formattedInput
+
     useEffect(() => {
-      formattedInput.setCaret(0)
-    }, [formattedInput, options])
+      formattedInputRef.current.setCaret(0)
+    }, [options])
 
     return (
       <div>
@@ -94,7 +97,7 @@ const magicInput = (
                         </em>
                         {type === 'boolean' && (
                           <Switch
-                            checked={options[name]}
+                            checked={options[name] ?? defaultValue}
                             onChange={(value) =>
                               setOptions((o) => {
                                 if (value === defaultValue) {
@@ -163,7 +166,7 @@ const magicInput = (
                         {type === 'number' && (
                           <MiniNumber
                             value={options[name] ?? null}
-                            onChange={({ value }) =>
+                            onChange={(value) =>
                               setOptions((o) => {
                                 if (value === defaultValue) {
                                   delete o[name]
@@ -403,4 +406,14 @@ export const MaskInput = magicInput(
     },
   ],
   { className: 'demo left' }
+)
+
+export const CreditCardInput = magicInput(
+  creditCardFormatter,
+  'creditCardFormatter',
+  [
+    { name: 'liveUpdate', type: 'boolean', defaultValue: false },
+    { name: 'allowOverflow', type: 'boolean', defaultValue: true },
+  ],
+  { className: 'demo left', style: { width: '100%' } }
 )

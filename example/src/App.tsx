@@ -22,7 +22,6 @@ function App() {
 
   useEffect(() => {
     const listener = (event) => {
-      console.log(event)
       setX({
         d: event.data,
         it: event.inputType,
@@ -35,18 +34,6 @@ function App() {
     input?.addEventListener('beforeinput', listener)
 
     return () => input?.removeEventListener('beforeinput', listener)
-  }, [])
-
-  useEffect(() => {
-    const listener = (event) => {
-      setX({
-        s: [inputRef.current?.selectionStart, inputRef.current?.selectionEnd],
-      })
-    }
-
-    document?.addEventListener('selectionchange', listener)
-
-    return () => document?.removeEventListener('selectionchange', listener)
   }, [])
 
   return (

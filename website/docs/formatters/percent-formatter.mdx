@@ -19,7 +19,7 @@ A thin wrapper around [`numberFormatter`](./number-formatter) that uses `locales
 Value of the input.
 
 ### onChange
-> Type: `(value: { value: number | null; formattedValue: string }) => void`<br/>
+> Type: `(value: number | null, formattedValue: string) => void`<br/>
 > Default: `undefined`
 
 The `onChange` callback is called when the value changes. It receives both the `formattedValue` and the `value`.
