@@ -62,6 +62,34 @@ const config = {
         theme: darkCodeTheme,
         darkTheme: darkCodeTheme,
       },
+      footer: {
+        style: 'dark',
+        links: [
+          {
+            title: 'Socials',
+            items: [
+              {
+                label: 'GitHub',
+                href: 'https://github.com/nick-keller/react-formatted-input-hook',
+              },
+              {
+                label: 'NPM',
+                href: 'https://www.npmjs.com/package/react-formatted-input-hook',
+              },
+              {
+                label: 'Tggl: Feature flags for teams',
+                to: 'https://tggl.io',
+                rel: '',
+              },
+              {
+                label: 'RabbitGUI: Modern RabbitMQ UI',
+                to: 'https://rabbitgui.com/',
+                rel: '',
+              },
+            ],
+          },
+        ],
+      }
     }),
 }
 
